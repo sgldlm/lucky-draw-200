@@ -1,0 +1,6 @@
+# 本地备份，不上传
+index.backup-*.html
+*.orig
+新建文本文档.txt
+.DS_Store
+Thumbs.db

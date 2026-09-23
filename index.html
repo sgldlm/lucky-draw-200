@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>200赛地 · 购物赢大奖 —官方活动平台</title>
+    <!-- PWA：可安装到手机桌面 / 电脑，支持离线打开 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FFCC00">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="赢大奖">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // 加纳 MoMo 风格：黄 + 黑为主，浅灰底白卡片，高对比
+                        momo: {
+                            yellow: '#FFCC00',   // 主色：MoMo 黄
+                            ink: '#111111',      // 主文字 / 黑色按钮
+                            gray: '#5F5F5F',     // 次要文字
+                            line: '#E3E3E3',     // 分隔线 / 进度条底
+                            bg: '#F4F4F4',       // 页面底色
+                            locked: '#3A3A3A',   // 已锁定格子（深灰）
+                            red: '#C62828'       // 危险操作
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .grid-cell {
+                @apply w-full aspect-square rounded-md flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors duration-150 font-extrabold text-[16px] md:text-[20px] leading-none;
+            }
+            /* 可选：黄底黑字，悬停反色 */
+            .cell-available {
+                @apply bg-momo-yellow text-momo-ink hover:bg-momo-ink hover:text-momo-yellow;
+            }
+            /* 已锁定：深灰底 + 白色锁 */
+            .cell-locked {
+                @apply bg-momo-locked text-white;
+            }
+        }
+    </style>
+</head>
+<body class="bg-momo-bg text-momo-ink min-h-screen">
+    <!-- 头部：MoMo 黄色顶栏 -->
+    <header class="bg-momo-yellow">
+        <div class="container mx-auto px-4 pt-8 pb-16 text-center">
+            <h1 class="text-[clamp(1.8rem,4vw,3rem)] font-extrabold tracking-tight text-momo-ink">200赛地 · 购物赢大奖</h1>
+        </div>
+    </header>
+
+    <!-- 实时数据卡片（压在黄色顶栏下沿） -->
+    <div class="container mx-auto px-4 -mt-10 mb-6">
+        <div class="bg-white rounded-2xl p-6 shadow-md">
+            <div class="grid grid-cols-3 text-center divide-x divide-momo-line">
+                <div>
+                    <p class="text-momo-gray text-sm">总名额</p>
+                    <p class="text-3xl font-extrabold mt-1">500</p>
+                </div>
+                <div>
+                    <p class="text-momo-gray text-sm">已售出</p>
+                    <p id="soldCount" class="text-3xl font-extrabold mt-1">0</p>
+                </div>
+                <div>
+                    <p class="text-momo-gray text-sm">剩余名额</p>
+                    <p id="remainCount" class="text-3xl font-extrabold mt-1">500</p>
+                </div>
+            </div>
+            <div class="mt-5 bg-momo-line rounded-full h-3 overflow-hidden">
+                <div id="progressBar" class="bg-momo-yellow h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <p class="text-center mt-2 text-sm text-momo-gray">本轮进度：<span id="progressPercent" class="font-bold text-momo-ink">0</span>%</p>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-4 pb-16">
+        <!-- 500格选号区 -->
+        <section class="mb-6">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h2 class="text-xl font-extrabold">选择您的名额 — 每格=200赛地商品+1次抽奖资格</h2>
+                <div class="flex items-center gap-3 text-sm">
+                    <span class="flex items-center gap-1"><span class="w-4 h-4 bg-momo-yellow rounded"></span> 可选</span>
+                    <span class="flex items-center gap-1"><span class="w-4 h-4 bg-momo-locked text-white rounded flex items-center justify-center"><i class="fa fa-lock text-[10px]"></i></span> 已锁定</span>
+                    <!-- 测试用：一键锁定全部格子 -->
+                    <button id="selectAllBtn" type="button" class="px-3 py-0.5 bg-momo-ink text-momo-yellow rounded-full hover:opacity-90">全选</button>
+                </div>
+            </div>
+
+            <div id="gridContainer" class="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-1 md:gap-1.5 select-none touch-none">
+                <!-- JS 自动生成500格 -->
+            </div>
+        </section>
+
+        <!-- 开始抽奖：500格全部锁定后才可进入抽奖 -->
+        <section class="mb-8">
+            <button id="drawBtn" type="button" class="w-full py-4 bg-momo-ink text-momo-yellow font-extrabold rounded-full text-lg hover:opacity-90">
+                开始抽奖
+            </button>
+        </section>
+
+        <!-- 管理员区 -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm">
+            <h3 class="font-extrabold mb-3">🔐 管理员操作区</h3>
+            <div class="flex gap-3 flex-wrap">
+                <button id="resetRoundBtn" class="px-4 py-2 bg-white border-2 border-momo-red text-momo-red hover:bg-momo-red hover:text-white rounded-full text-sm font-bold">
+                    开启新一轮（清空数据）
+                </button>
+                <button id="exportDataBtn" class="px-4 py-2 bg-white border-2 border-momo-ink text-momo-ink hover:bg-momo-ink hover:text-white rounded-full text-sm font-bold">
+                    导出本轮数据
+                </button>
+            </div>
+            <p class="mt-3 text-xs text-momo-gray">重置后当前轮数据不可恢复；建议先导出保存</p>
+        </section>
+    </main>
+
+    <!-- 抽奖页（全屏，嵌入 lucky-draw） -->
+    <div id="drawView" class="fixed inset-0 z-50 bg-black flex-col hidden">
+        <div class="bg-momo-yellow h-1.5 shrink-0"></div>
+        <!-- "返回"按钮在抽奖页顶栏内（lucky-draw/custom-music.js），点击后发消息关闭本层 -->
+        <iframe id="drawFrame" title="抽奖" class="w-full flex-1 border-0" allow="fullscreen; autoplay"></iframe>
+    </div>
+
+    <footer class="bg-momo-ink py-5 text-center text-sm text-gray-400">
+        <p class="text-momo-yellow font-bold">200赛地购物赢大奖 · 官方活动平台</p>
+        <p class="mt-1">加纳 · 阿克拉 | 依法合规运营</p>
+    </footer>
+
+    <script>
+        // ============== 配置区 ==============
+        const CONFIG = {
+            // 单价
+            PRICE_PER_SLOT: 200,
+
+            // 总名额
+            TOTAL_SLOTS: 500,
+
+            // 抽奖页面地址（全部锁定后点击"开始抽奖"进入）
+            // 本地副本，基于开源项目 vitozyf/lucky-draw（MIT），默认标题/人数已改
+            DRAW_URL: 'lucky-draw/index.html#/',
+
+            // 本地存储键名
+            // 改用新键名，丢弃旧版本随机生成的演示"已售出"数据
+            STORAGE_KEY: 'shopwin_round_data_v2'
+        };
+        // ============== 配置区结束 ==============
+
+        // 状态
+        let soldSlots = new Set();
+        let selectedSlots = new Set();
+
+        // DOM 元素
+        const gridContainer = document.getElementById('gridContainer');
+        const soldCountEl = document.getElementById('soldCount');
+        const remainCountEl = document.getElementById('remainCount');
+        const progressBarEl = document.getElementById('progressBar');
+        const progressPercentEl = document.getElementById('progressPercent');
+
+        // ========== 数据持久化 ==========
+        function loadData() {
+            const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    if (data.soldSlots && Array.isArray(data.soldSlots)) {
+                        soldSlots = new Set(data.soldSlots);
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('数据解析失败', e);
+                }
+            }
+            return false;
+        }
+
+        // ========== 生成格子 ==========
+        function initGrid() {
+            gridContainer.innerHTML = '';
+            for (let i = 1; i <= CONFIG.TOTAL_SLOTS; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell cell-available';
+                cell.textContent = i;
+                cell.dataset.id = i;
+                gridContainer.appendChild(cell);
+            }
+            updateStats();
+        }
+
+        // ========== 锁定/解锁（点击一次锁定，连续点按3次才解锁，防误碰） ==========
+        const UNLOCK_TAPS = 3;          // 解锁所需连续点按次数
+        const UNLOCK_WINDOW_MS = 800;   // 两次点按最大间隔，超时重新计数
+        let unlockTap = { id: null, count: 0, last: 0 };
+
+        function isLocked(id) {
+            return soldSlots.has(id) || selectedSlots.has(id);
+        }
+
+        // 锁定一个可选格子，返回是否有变化
+        function lockCell(id) {
+            if (isLocked(id)) return false;
+            selectedSlots.add(id);
+            return true;
+        }
+
+        // 在已锁定格子上点按：连续3次才解锁
+        function tapLockedCell(id) {
+            if (soldSlots.has(id)) return false; // 已支付的名额不能解锁
+            const now = Date.now();
+            const continuing = unlockTap.id === id && now - unlockTap.last <= UNLOCK_WINDOW_MS;
+            unlockTap = { id, count: continuing ? unlockTap.count + 1 : 1, last: now };
+            if (unlockTap.count < UNLOCK_TAPS) return false;
+            selectedSlots.delete(id);
+            unlockTap = { id: null, count: 0, last: 0 };
+            return true;
+        }
+
+        function refresh() {
+            renderCells();
+            updateStats();
+        }
+
+        // ========== 按住拖拽连续锁定（鼠标 / 触屏通用） ==========
+        let dragging = false;
+        let lastPoint = null;
+
+        // 沿上一个点到当前点的路径逐段取样，快速拖动时也不会漏掉中间的格子
+        function lockAlongPath(x, y) {
+            let changed = false;
+            const from = lastPoint || { x, y };
+            const step = 6; // 取样间距（像素），小于格子尺寸
+            const n = Math.max(1, Math.ceil(Math.hypot(x - from.x, y - from.y) / step));
+            for (let k = 1; k <= n; k++) {
+                const id = cellIdAt(from.x + (x - from.x) * k / n, from.y + (y - from.y) * k / n);
+                if (id !== null && lockCell(id)) changed = true;
+            }
+            lastPoint = { x, y };
+            return changed;
+        }
+
+        function cellIdAt(x, y) {
+            const el = document.elementFromPoint(x, y);
+            const cell = el && el.closest('#gridContainer .grid-cell');
+            return cell ? parseInt(cell.dataset.id) : null;
+        }
+
+        gridContainer.addEventListener('pointerdown', (e) => {
+            const id = cellIdAt(e.clientX, e.clientY);
+            if (id === null) return;
+            e.preventDefault();
+            if (isLocked(id)) {
+                // 按在已锁定格子上：只做解锁计数，不开始拖拽
+                if (tapLockedCell(id)) refresh();
+                return;
+            }
+            unlockTap = { id: null, count: 0, last: 0 };
+            dragging = true;
+            lastPoint = { x: e.clientX, y: e.clientY };
+            // 触屏下释放指针捕获，拖动时才能命中其它格子
+            if (gridContainer.hasPointerCapture(e.pointerId)) gridContainer.releasePointerCapture(e.pointerId);
+            if (lockCell(id)) refresh();
+        });
+
+        document.addEventListener('pointermove', (e) => {
+            if (!dragging) return;
+            if (lockAlongPath(e.clientX, e.clientY)) refresh();
+        });
+
+        const stopDrag = () => { dragging = false; lastPoint = null; };
+        document.addEventListener('pointerup', stopDrag);
+        document.addEventListener('pointercancel', stopDrag);
+
+        // ========== 全选（测试用）：一键锁定全部格子 ==========
+        document.getElementById('selectAllBtn').addEventListener('click', () => {
+            for (let i = 1; i <= CONFIG.TOTAL_SLOTS; i++) lockCell(i);
+            refresh();
+        });
+
+        // ========== 开始抽奖：500格全部锁定才进入，否则无反应 ==========
+        const drawView = document.getElementById('drawView');
+        const drawFrame = document.getElementById('drawFrame');
+
+        function allLocked() {
+            return soldSlots.size + selectedSlots.size >= CONFIG.TOTAL_SLOTS;
+        }
+
+        document.getElementById('drawBtn').addEventListener('click', () => {
+            if (!allLocked()) return;
+            if (!drawFrame.src) drawFrame.src = CONFIG.DRAW_URL; // 首次进入才加载
+            else drawFrame.contentWindow.postMessage({ type: 'lucky-draw:show' }, '*'); // 再次进入：继续播放音乐
+            drawView.classList.remove('hidden');
+            drawView.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // 抽奖页顶栏的"返回"按钮通过 postMessage 通知关闭
+        window.addEventListener('message', (e) => {
+            if (e.source !== drawFrame.contentWindow) return;
+            if (!e.data || e.data.type !== 'lucky-draw:back') return;
+            drawView.classList.add('hidden');
+            drawView.classList.remove('flex');
+            document.body.style.overflow = '';
+        });
+
+        // ========== 渲染格子状态 ==========
+        function renderCells() {
+            for (let i = 1; i <= CONFIG.TOTAL_SLOTS; i++) {
+                const cell = gridContainer.querySelector(`[data-id="${i}"]`);
+                cell.className = 'grid-cell';
+                if (soldSlots.has(i) || selectedSlots.has(i)) {
+                    cell.classList.add('cell-locked');
+                    cell.innerHTML = `<i class="fa fa-lock text-[20px] md:text-[32px]"></i>`;
+                } else {
+                    cell.classList.add('cell-available');
+                    cell.textContent = i;
+                }
+            }
+        }
+
+        // ========== 更新统计数据 ==========
+        function updateStats() {
+            // 锁定即售出：已售出 = 已支付 + 当前锁定
+            const sold = soldSlots.size + selectedSlots.size;
+            const remain = CONFIG.TOTAL_SLOTS - sold;
+            const percent = Math.round((sold / CONFIG.TOTAL_SLOTS) * 100);
+
+            soldCountEl.textContent = sold;
+            remainCountEl.textContent = remain;
+            progressBarEl.style.width = `${percent}%`;
+            progressPercentEl.textContent = percent;
+        }
+
+        // ========== 管理员工具 ==========
+        document.getElementById('resetRoundBtn').addEventListener('click', () => {
+            if (!confirm('⚠️ 确定重置本轮？\n所有数据将清空且不可恢复！\n建议先导出数据保存。')) return;
+            if (!confirm('再次确认：开启全新一轮？')) return;
+
+            soldSlots.clear();
+            selectedSlots.clear();
+            localStorage.removeItem(CONFIG.STORAGE_KEY);
+            initGrid();
+            alert('✅ 已重置！');
+        });
+
+        document.getElementById('exportDataBtn').addEventListener('click', () => {
+            // 锁定即售出：导出已支付 + 当前锁定的名额
+            const sold = Array.from(new Set([...soldSlots, ...selectedSlots]));
+            const data = {
+                roundDate: new Date().toLocaleString('zh-CN'),
+                totalSlots: CONFIG.TOTAL_SLOTS,
+                soldCount: sold.length,
+                soldSlotNumbers: sold.sort((a, b) => a - b)
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `round-data-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('✅ 数据已导出！');
+        });
+
+        // PWA：注册 Service Worker（需通过 https 或 localhost 访问；双击本地文件打开时自动跳过）
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch((e) => console.warn('Service Worker 注册失败', e));
+            });
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initGrid();
+            loadData();
+            renderCells();
+            updateStats();
+        });
+    </script>
+</body>
+</html>
