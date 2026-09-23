@@ -19,15 +19,15 @@
             theme: {
                 extend: {
                     colors: {
-                        // 加纳 MoMo 风格：黄 + 黑为主，浅灰底白卡片，高对比
+                        // 加纳 MoMo 风格：主色 + 黑为主，浅灰底白卡片，高对比
                         momo: {
-                            yellow: '#FFCC00',   // 主色：MoMo 黄
-                            ink: '#111111',      // 主文字 / 黑色按钮
-                            gray: '#5F5F5F',     // 次要文字
-                            line: '#E3E3E3',     // 分隔线 / 进度条底
-                            bg: '#F4F4F4',       // 页面底色
-                            locked: '#3A3A3A',   // 已锁定格子（深灰）
-                            red: '#C62828'       // 危险操作
+                            accent: 'var(--accent)', // 场次主色：200赛地场 MoMo 黄，100赛地场 橙色
+                            ink: '#111111',          // 主文字 / 黑色按钮
+                            gray: '#5F5F5F',         // 次要文字
+                            line: '#E3E3E3',         // 分隔线 / 进度条底
+                            bg: '#F4F4F4',           // 页面底色
+                            locked: '#3A3A3A',       // 已锁定格子（深灰）
+                            red: '#C62828'           // 危险操作
                         }
                     },
                     fontFamily: {
@@ -37,31 +37,52 @@
             }
         }
     </script>
+    <style>
+        /* 两个场次的主色 */
+        :root { --accent: #FFCC00; }
+        body[data-round="100"] { --accent: #FF9F1C; }
+        /* 格子里的数字 / 锁随格子大小缩放，窄屏时三位数也不会溢出 */
+        #gridContainer { container-type: inline-size; }
+        #gridContainer .grid-cell { font-size: min(20px, 2.3cqi); }
+        #gridContainer .lock-icon { font-size: min(32px, 3.4cqi); }
+    </style>
     <style type="text/tailwindcss">
         @layer utilities {
             .grid-cell {
-                @apply w-full aspect-square rounded-md flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors duration-150 font-extrabold text-[16px] md:text-[20px] leading-none;
+                @apply w-full aspect-square rounded-md flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors duration-150 font-extrabold leading-none;
             }
-            /* 可选：黄底黑字，悬停反色 */
+            /* 可选：主色底黑字，悬停反色 */
             .cell-available {
-                @apply bg-momo-yellow text-momo-ink hover:bg-momo-ink hover:text-momo-yellow;
+                @apply bg-momo-accent text-momo-ink hover:bg-momo-ink hover:text-momo-accent;
             }
             /* 已锁定：深灰底 + 白色锁 */
             .cell-locked {
                 @apply bg-momo-locked text-white;
             }
+            /* 场次切换按钮 */
+            .round-tab {
+                @apply px-5 py-2 rounded-full font-extrabold text-base md:text-lg border-2 border-momo-ink text-momo-ink transition-colors;
+            }
+            .round-tab.active {
+                @apply bg-momo-ink text-momo-accent;
+            }
         }
     </style>
 </head>
-<body class="bg-momo-bg text-momo-ink min-h-screen">
-    <!-- 头部：MoMo 黄色顶栏 -->
-    <header class="bg-momo-yellow">
+<body class="bg-momo-bg text-momo-ink min-h-screen" data-round="200">
+    <!-- 头部：场次主色顶栏 -->
+    <header class="bg-momo-accent transition-colors">
         <div class="container mx-auto px-4 pt-8 pb-16 text-center">
-            <h1 class="text-[clamp(1.8rem,4vw,3rem)] font-extrabold tracking-tight text-momo-ink">200赛地 · 购物赢大奖</h1>
+            <h1 class="text-[clamp(1.8rem,4vw,3rem)] font-extrabold tracking-tight text-momo-ink"><span class="js-price">200</span>赛地 · 购物赢大奖</h1>
+            <!-- 场次切换 -->
+            <div class="mt-4 inline-flex gap-2" role="tablist" aria-label="选择场次">
+                <button type="button" class="round-tab active" data-round="200" role="tab">200赛地场</button>
+                <button type="button" class="round-tab" data-round="100" role="tab">100赛地场</button>
+            </div>
         </div>
     </header>
 
-    <!-- 实时数据卡片（压在黄色顶栏下沿） -->
+    <!-- 实时数据卡片（压在顶栏下沿） -->
     <div class="container mx-auto px-4 -mt-10 mb-6">
         <div class="bg-white rounded-2xl p-6 shadow-md">
             <div class="grid grid-cols-3 text-center divide-x divide-momo-line">
@@ -79,7 +100,7 @@
                 </div>
             </div>
             <div class="mt-5 bg-momo-line rounded-full h-3 overflow-hidden">
-                <div id="progressBar" class="bg-momo-yellow h-full transition-all duration-500" style="width: 0%"></div>
+                <div id="progressBar" class="bg-momo-accent h-full transition-all duration-500" style="width: 0%"></div>
             </div>
             <p class="text-center mt-2 text-sm text-momo-gray">本轮进度：<span id="progressPercent" class="font-bold text-momo-ink">0</span>%</p>
         </div>
@@ -89,12 +110,12 @@
         <!-- 500格选号区 -->
         <section class="mb-6">
             <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <h2 class="text-xl font-extrabold">选择您的名额 — 每格=200赛地商品+1次抽奖资格</h2>
+                <h2 class="text-xl font-extrabold">选择您的名额 — 每格=<span class="js-price">200</span>赛地商品+1次抽奖资格</h2>
                 <div class="flex items-center gap-3 text-sm">
-                    <span class="flex items-center gap-1"><span class="w-4 h-4 bg-momo-yellow rounded"></span> 可选</span>
+                    <span class="flex items-center gap-1"><span class="w-4 h-4 bg-momo-accent rounded"></span> 可选</span>
                     <span class="flex items-center gap-1"><span class="w-4 h-4 bg-momo-locked text-white rounded flex items-center justify-center"><i class="fa fa-lock text-[10px]"></i></span> 已锁定</span>
                     <!-- 测试用：一键锁定全部格子 -->
-                    <button id="selectAllBtn" type="button" class="px-3 py-0.5 bg-momo-ink text-momo-yellow rounded-full hover:opacity-90">全选</button>
+                    <button id="selectAllBtn" type="button" class="px-3 py-0.5 bg-momo-ink text-momo-accent rounded-full hover:opacity-90">全选</button>
                 </div>
             </div>
 
@@ -105,14 +126,14 @@
 
         <!-- 开始抽奖：500格全部锁定后才可进入抽奖 -->
         <section class="mb-8">
-            <button id="drawBtn" type="button" class="w-full py-4 bg-momo-ink text-momo-yellow font-extrabold rounded-full text-lg hover:opacity-90">
+            <button id="drawBtn" type="button" class="w-full py-4 bg-momo-ink text-momo-accent font-extrabold rounded-full text-lg hover:opacity-90">
                 开始抽奖
             </button>
         </section>
 
         <!-- 管理员区 -->
         <section class="bg-white p-5 rounded-2xl shadow-sm">
-            <h3 class="font-extrabold mb-3">🔐 管理员操作区</h3>
+            <h3 class="font-extrabold mb-3">🔐 管理员操作区（<span class="js-price">200</span>赛地场）</h3>
             <div class="flex gap-3 flex-wrap">
                 <button id="resetRoundBtn" class="px-4 py-2 bg-white border-2 border-momo-red text-momo-red hover:bg-momo-red hover:text-white rounded-full text-sm font-bold">
                     开启新一轮（清空数据）
@@ -121,44 +142,51 @@
                     导出本轮数据
                 </button>
             </div>
-            <p class="mt-3 text-xs text-momo-gray">重置后当前轮数据不可恢复；建议先导出保存</p>
+            <p class="mt-3 text-xs text-momo-gray">只对当前场次生效；重置后当前轮数据不可恢复，建议先导出保存</p>
         </section>
     </main>
 
-    <!-- 抽奖页（全屏，嵌入 lucky-draw） -->
+    <!-- 抽奖页（全屏，嵌入 lucky-draw；每个场次一个独立的抽奖页） -->
     <div id="drawView" class="fixed inset-0 z-50 bg-black flex-col hidden">
-        <div class="bg-momo-yellow h-1.5 shrink-0"></div>
+        <div class="bg-momo-accent h-1.5 shrink-0"></div>
         <!-- "返回"按钮在抽奖页顶栏内（lucky-draw/custom-music.js），点击后发消息关闭本层 -->
-        <iframe id="drawFrame" title="抽奖" class="w-full flex-1 border-0" allow="fullscreen; autoplay"></iframe>
+        <iframe id="drawFrame200" data-round="200" title="200赛地场抽奖" class="w-full flex-1 border-0 hidden" allow="fullscreen; autoplay"></iframe>
+        <iframe id="drawFrame100" data-round="100" title="100赛地场抽奖" class="w-full flex-1 border-0 hidden" allow="fullscreen; autoplay"></iframe>
     </div>
 
     <footer class="bg-momo-ink py-5 text-center text-sm text-gray-400">
-        <p class="text-momo-yellow font-bold">200赛地购物赢大奖 · 官方活动平台</p>
+        <p class="text-momo-accent font-bold"><span class="js-price">200</span>赛地购物赢大奖 · 官方活动平台</p>
         <p class="mt-1">加纳 · 阿克拉 | 依法合规运营</p>
     </footer>
 
     <script>
         // ============== 配置区 ==============
         const CONFIG = {
-            // 单价
-            PRICE_PER_SLOT: 200,
-
-            // 总名额
+            // 总名额（每个场次）
             TOTAL_SLOTS: 500,
 
-            // 抽奖页面地址（全部锁定后点击"开始抽奖"进入）
-            // 本地副本，基于开源项目 vitozyf/lucky-draw（MIT），默认标题/人数已改
-            DRAW_URL: 'lucky-draw/index.html#/',
+            // 两个场次：单价、抽奖页地址、本地存储键名
+            // 抽奖页为本地副本，基于开源项目 vitozyf/lucky-draw（MIT）；?round=100 让 100 赛地场的抽奖配置/结果单独保存
+            ROUNDS: {
+                200: { price: 200, drawUrl: 'lucky-draw/index.html#/', storageKey: 'shopwin_round_data_v2', color: '#FFCC00' },
+                100: { price: 100, drawUrl: 'lucky-draw/index.html?round=100#/', storageKey: 'shopwin_round_data_100', color: '#FF9F1C' }
+            },
 
-            // 本地存储键名
-            // 改用新键名，丢弃旧版本随机生成的演示"已售出"数据
-            STORAGE_KEY: 'shopwin_round_data_v2'
+            // 记住上次打开的场次
+            CURRENT_ROUND_KEY: 'shopwin_current_round'
         };
         // ============== 配置区结束 ==============
 
-        // 状态
-        let soldSlots = new Set();
-        let selectedSlots = new Set();
+        // 每个场次各自的锁定状态：sold = 已支付（持久保存），selected = 当前锁定
+        const roundState = {};
+        Object.keys(CONFIG.ROUNDS).forEach((r) => {
+            roundState[r] = { sold: new Set(), selected: new Set() };
+        });
+
+        // 当前场次（soldSlots / selectedSlots 指向当前场次的集合）
+        let currentRound = '200';
+        let soldSlots = roundState[currentRound].sold;
+        let selectedSlots = roundState[currentRound].selected;
 
         // DOM 元素
         const gridContainer = document.getElementById('gridContainer');
@@ -166,15 +194,16 @@
         const remainCountEl = document.getElementById('remainCount');
         const progressBarEl = document.getElementById('progressBar');
         const progressPercentEl = document.getElementById('progressPercent');
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
         // ========== 数据持久化 ==========
-        function loadData() {
-            const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+        function loadData(round) {
+            const stored = localStorage.getItem(CONFIG.ROUNDS[round].storageKey);
             if (stored) {
                 try {
                     const data = JSON.parse(stored);
                     if (data.soldSlots && Array.isArray(data.soldSlots)) {
-                        soldSlots = new Set(data.soldSlots);
+                        roundState[round].sold = new Set(data.soldSlots);
                         return true;
                     }
                 } catch (e) {
@@ -196,6 +225,33 @@
             }
             updateStats();
         }
+
+        // ========== 场次切换 ==========
+        function switchRound(round) {
+            if (!CONFIG.ROUNDS[round]) round = '200';
+            currentRound = round;
+            soldSlots = roundState[round].sold;
+            selectedSlots = roundState[round].selected;
+            unlockTap = { id: null, count: 0, last: 0 };
+
+            const price = CONFIG.ROUNDS[round].price;
+            document.body.dataset.round = round;
+            document.querySelectorAll('.js-price').forEach((el) => { el.textContent = price; });
+            document.querySelectorAll('.round-tab').forEach((tab) => {
+                const active = tab.dataset.round === round;
+                tab.classList.toggle('active', active);
+                tab.setAttribute('aria-selected', active);
+            });
+            document.title = `${price}赛地 · 购物赢大奖 —官方活动平台`;
+            themeColorMeta.setAttribute('content', CONFIG.ROUNDS[round].color);
+            try { localStorage.setItem(CONFIG.CURRENT_ROUND_KEY, round); } catch (e) {}
+
+            refresh();
+        }
+
+        document.querySelectorAll('.round-tab').forEach((tab) => {
+            tab.addEventListener('click', () => switchRound(tab.dataset.round));
+        });
 
         // ========== 锁定/解锁（点击一次锁定，连续点按3次才解锁，防误碰） ==========
         const UNLOCK_TAPS = 3;          // 解锁所需连续点按次数
@@ -280,15 +336,18 @@
         document.addEventListener('pointerup', stopDrag);
         document.addEventListener('pointercancel', stopDrag);
 
-        // ========== 全选（测试用）：一键锁定全部格子 ==========
+        // ========== 全选（测试用）：一键锁定当前场次全部格子 ==========
         document.getElementById('selectAllBtn').addEventListener('click', () => {
             for (let i = 1; i <= CONFIG.TOTAL_SLOTS; i++) lockCell(i);
             refresh();
         });
 
-        // ========== 开始抽奖：500格全部锁定才进入，否则无反应 ==========
+        // ========== 开始抽奖：当前场次500格全部锁定才进入，否则无反应 ==========
         const drawView = document.getElementById('drawView');
-        const drawFrame = document.getElementById('drawFrame');
+        const drawFrames = {
+            200: document.getElementById('drawFrame200'),
+            100: document.getElementById('drawFrame100')
+        };
 
         function allLocked() {
             return soldSlots.size + selectedSlots.size >= CONFIG.TOTAL_SLOTS;
@@ -296,8 +355,10 @@
 
         document.getElementById('drawBtn').addEventListener('click', () => {
             if (!allLocked()) return;
-            if (!drawFrame.src) drawFrame.src = CONFIG.DRAW_URL; // 首次进入才加载
-            else drawFrame.contentWindow.postMessage({ type: 'lucky-draw:show' }, '*'); // 再次进入：继续播放音乐
+            const frame = drawFrames[currentRound];
+            if (!frame.src) frame.src = CONFIG.ROUNDS[currentRound].drawUrl; // 首次进入才加载
+            else frame.contentWindow.postMessage({ type: 'lucky-draw:show' }, '*'); // 再次进入：继续播放音乐
+            Object.values(drawFrames).forEach((f) => f.classList.toggle('hidden', f !== frame));
             drawView.classList.remove('hidden');
             drawView.classList.add('flex');
             document.body.style.overflow = 'hidden';
@@ -305,7 +366,8 @@
 
         // 抽奖页顶栏的"返回"按钮通过 postMessage 通知关闭
         window.addEventListener('message', (e) => {
-            if (e.source !== drawFrame.contentWindow) return;
+            const fromDrawPage = Object.values(drawFrames).some((f) => f.contentWindow === e.source);
+            if (!fromDrawPage) return;
             if (!e.data || e.data.type !== 'lucky-draw:back') return;
             drawView.classList.add('hidden');
             drawView.classList.remove('flex');
@@ -319,7 +381,7 @@
                 cell.className = 'grid-cell';
                 if (soldSlots.has(i) || selectedSlots.has(i)) {
                     cell.classList.add('cell-locked');
-                    cell.innerHTML = `<i class="fa fa-lock text-[20px] md:text-[32px]"></i>`;
+                    cell.innerHTML = `<i class="fa fa-lock lock-icon"></i>`;
                 } else {
                     cell.classList.add('cell-available');
                     cell.textContent = i;
@@ -340,22 +402,25 @@
             progressPercentEl.textContent = percent;
         }
 
-        // ========== 管理员工具 ==========
+        // ========== 管理员工具（只作用于当前场次） ==========
         document.getElementById('resetRoundBtn').addEventListener('click', () => {
-            if (!confirm('⚠️ 确定重置本轮？\n所有数据将清空且不可恢复！\n建议先导出数据保存。')) return;
+            const price = CONFIG.ROUNDS[currentRound].price;
+            if (!confirm(`⚠️ 确定重置 ${price}赛地场本轮？\n该场次数据将清空且不可恢复！\n建议先导出数据保存。`)) return;
             if (!confirm('再次确认：开启全新一轮？')) return;
 
             soldSlots.clear();
             selectedSlots.clear();
-            localStorage.removeItem(CONFIG.STORAGE_KEY);
-            initGrid();
+            localStorage.removeItem(CONFIG.ROUNDS[currentRound].storageKey);
+            refresh();
             alert('✅ 已重置！');
         });
 
         document.getElementById('exportDataBtn').addEventListener('click', () => {
             // 锁定即售出：导出已支付 + 当前锁定的名额
             const sold = Array.from(new Set([...soldSlots, ...selectedSlots]));
+            const price = CONFIG.ROUNDS[currentRound].price;
             const data = {
+                round: `${price}赛地场`,
                 roundDate: new Date().toLocaleString('zh-CN'),
                 totalSlots: CONFIG.TOTAL_SLOTS,
                 soldCount: sold.length,
@@ -365,7 +430,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `round-data-${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `round-${price}-data-${new Date().toISOString().slice(0,10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
             alert('✅ 数据已导出！');
@@ -381,9 +446,10 @@
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             initGrid();
-            loadData();
-            renderCells();
-            updateStats();
+            Object.keys(CONFIG.ROUNDS).forEach(loadData);
+            let saved = '200';
+            try { saved = localStorage.getItem(CONFIG.CURRENT_ROUND_KEY) || '200'; } catch (e) {}
+            switchRound(saved);
         });
     </script>
 </body>

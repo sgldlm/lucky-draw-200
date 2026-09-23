@@ -12,6 +12,10 @@
     var STORE = 'files';
     var KEY = 'playlist';
 
+    // 场次主色（round-storage.js 设置 window.LUCKY_DRAW_ROUND）
+    var ROUND = window.LUCKY_DRAW_ROUND || '200';
+    var ACCENT = ROUND === '100' ? '#FF9F1C' : '#FFCC00';
+
     // 页面固定音乐
     var FIXED_TRACK = { name: '1998韩国歌曲 哎', url: 'media/fixed-music.mp3', fixed: true };
 
@@ -88,18 +92,25 @@
         style.textContent =
             '#root .audio{display:none!important}' + // 隐藏内置音乐播放按钮
             '#root .copy-right{color:#000!important}' + // 右下角版权文字改成与底色一致的黑色（授权声明保留在 LICENSE 文件中）
-            // MoMo 风格：点缀色统一为 MoMo 黄 #FFCC00（原为蓝色/红色）
-            '#root .c-Publicity .item.actiname .title,#resbox p{color:#FFCC00!important}' +
-            '#root header .el-button--text{color:#FFCC00!important}' +
-            '#tool .el-button--primary{background:#FFCC00!important;border-color:#FFCC00!important;color:#111!important;font-weight:700}' +
+            // MoMo 风格：点缀色统一为场次主色（200赛地场 MoMo 黄，100赛地场 橙色；原为蓝色/红色）
+            '#root .c-Publicity .item.actiname .title,#resbox p{color:' + ACCENT + '!important}' +
+            '#root header .el-button--text{color:' + ACCENT + '!important}' +
+            '#tool .el-button--primary{background:' + ACCENT + '!important;border-color:' + ACCENT + '!important;color:#111!important;font-weight:700}' +
             '#cm-box{position:fixed;top:100px;right:30px;z-index:10000;display:flex;flex-direction:column;align-items:flex-end;gap:6px}' +
-            '#cm-pick{width:40px;height:40px;border:1px solid #FFCC00;border-radius:50%;background:transparent;color:#FFCC00;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}' +
-            '#cm-pick:hover{background:rgba(255,204,0,.15)}' +
+            '#cm-pick{width:40px;height:40px;border:1px solid ' + ACCENT + ';border-radius:50%;background:transparent;color:' + ACCENT + ';cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}' +
+            '#cm-pick:hover{background:' + ACCENT + '26}' +
             '#cm-name{max-width:180px;color:#ddd;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}' +
-            '#cm-reset{color:#FFCC00;font-size:12px;cursor:pointer;background:none;border:0;padding:0}' +
-            '#cm-back{position:fixed;top:0;height:50px;line-height:50px;z-index:10000;background:none;border:0;padding:0;color:#FFCC00;font-size:14px;cursor:pointer}' +
-            '#cm-back:hover{opacity:.8}';
+            '#cm-reset{color:' + ACCENT + ';font-size:12px;cursor:pointer;background:none;border:0;padding:0}' +
+            '#cm-back{position:fixed;top:0;height:50px;line-height:50px;z-index:10000;background:none;border:0;padding:0;color:' + ACCENT + ';font-size:14px;cursor:pointer}' +
+            '#cm-back:hover{opacity:.8}' +
+            '#cm-round{position:fixed;top:0;left:20px;height:50px;line-height:50px;z-index:10000;color:' + ACCENT + ';font-size:14px;font-weight:700}';
         document.head.appendChild(style);
+
+        // 顶栏左侧显示当前场次
+        var roundLabel = document.createElement('div');
+        roundLabel.id = 'cm-round';
+        roundLabel.textContent = ROUND + '赛地场';
+        document.body.appendChild(roundLabel);
 
         var box = document.createElement('div');
         box.id = 'cm-box';
