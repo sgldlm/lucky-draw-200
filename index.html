@@ -41,10 +41,20 @@
         /* 两个场次的主色 */
         :root { --accent: #FFCC00; }
         body[data-round="100"] { --accent: #FF9F1C; }
-        /* 格子里的数字 / 锁随格子大小缩放：窄屏不溢出，大屏（LED）自动放大 */
-        #gridContainer { container-type: inline-size; }
-        #gridContainer .grid-cell { font-size: 2.3cqi; }
-        #gridContainer .lock-icon { font-size: 3.4cqi; }
+        /* 每行格数：电脑 / 大屏（LED）每行 50 格；手机、平板每行 20 格（50 格在窄屏上太小无法点选） */
+        #gridContainer {
+            --cols: 20;
+            display: grid;
+            grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+            gap: 2px;
+            container-type: inline-size;
+        }
+        @media (min-width: 1024px) {
+            #gridContainer { --cols: 50; gap: 4px; }
+        }
+        /* 格子里的数字 / 锁随格子大小等比缩放（格子宽约 100cqi / 格数） */
+        #gridContainer .grid-cell { font-size: calc(43cqi / var(--cols)); border-radius: calc(12cqi / var(--cols)); }
+        #gridContainer .lock-icon { font-size: calc(68cqi / var(--cols)); }
     </style>
     <style type="text/tailwindcss">
         @layer utilities {
@@ -119,7 +129,7 @@
                 </div>
             </div>
 
-            <div id="gridContainer" class="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-1 md:gap-1.5 select-none touch-none">
+            <div id="gridContainer" class="select-none touch-none">
                 <!-- JS 自动生成500格 -->
             </div>
         </section>
