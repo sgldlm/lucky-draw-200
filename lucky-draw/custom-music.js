@@ -92,7 +92,7 @@
         style.textContent =
             '#root .audio{display:none!important}' + // 隐藏内置音乐播放按钮
             '#root .copy-right{color:#000!important}' + // 右下角版权文字改成与底色一致的黑色（授权声明保留在 LICENSE 文件中）
-            // MoMo 风格：点缀色统一为场次主色（200赛地场 MoMo 黄，100赛地场 橙色；原为蓝色/红色）
+            // MoMo 风格：点缀色统一为场次主色（200赛地专场 MoMo 黄，100赛地专场 橙色；原为蓝色/红色）
             '#root .c-Publicity .item.actiname .title,#resbox p{color:' + ACCENT + '!important}' +
             '#root header .el-button--text{color:' + ACCENT + '!important}' +
             '#tool .el-button--primary{background:' + ACCENT + '!important;border-color:' + ACCENT + '!important;color:#111!important;font-weight:700}' +
@@ -109,7 +109,7 @@
         // 顶栏左侧显示当前场次
         var roundLabel = document.createElement('div');
         roundLabel.id = 'cm-round';
-        roundLabel.textContent = ROUND + '赛地场';
+        roundLabel.textContent = ROUND + '赛地专场';
         document.body.appendChild(roundLabel);
 
         var box = document.createElement('div');
