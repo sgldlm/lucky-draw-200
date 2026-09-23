@@ -79,13 +79,13 @@
         }
     </style>
 </head>
-<body class="bg-momo-bg text-momo-ink min-h-screen" data-round="100">
+<body class="bg-momo-bg text-momo-ink min-h-screen flex flex-col" data-round="100">
     <!-- 头部：场次主色顶栏 -->
     <header class="bg-momo-accent transition-colors">
-        <div class="container mx-auto px-4 pt-8 pb-16 text-center">
-            <h1 class="text-[clamp(1.8rem,4vw,3rem)] font-extrabold tracking-tight text-momo-ink"><span class="js-price">100</span>赛地 · 购物赢大奖</h1>
+        <div class="container mx-auto px-4 pt-3 pb-9 text-center">
+            <h1 class="text-[clamp(1.6rem,3vw,2.5rem)] font-extrabold tracking-tight text-momo-ink leading-tight"><span class="js-price">100</span>赛地 · 购物赢大奖</h1>
             <!-- 场次切换 -->
-            <div class="mt-4 inline-flex gap-2" role="tablist" aria-label="选择场次">
+            <div class="mt-2 inline-flex gap-2" role="tablist" aria-label="选择场次">
                 <button type="button" class="round-tab active" data-round="100" role="tab">100赛地专场</button>
                 <button type="button" class="round-tab" data-round="200" role="tab">200赛地专场</button>
             </div>
@@ -93,39 +93,41 @@
     </header>
 
     <!-- 实时数据卡片（压在顶栏下沿）；内容宽度占屏幕 90%、左右留白，格子和文字随宽度等比缩放，方便大 LED 屏使用 -->
-    <div class="w-[90%] mx-auto -mt-10 mb-6">
-        <div class="bg-white rounded-2xl p-6 shadow-md">
+    <div class="w-[90%] mx-auto -mt-7 mb-3">
+        <div class="bg-white rounded-2xl px-6 py-3 shadow-md">
             <div class="grid grid-cols-3 text-center divide-x divide-momo-line">
                 <div>
                     <p class="text-momo-gray text-sm">总名额</p>
-                    <p class="text-3xl font-extrabold mt-1">500</p>
+                    <p class="text-2xl font-extrabold">500</p>
                 </div>
                 <div>
                     <p class="text-momo-gray text-sm">已售出</p>
-                    <p id="soldCount" class="text-3xl font-extrabold mt-1">0</p>
+                    <p id="soldCount" class="text-2xl font-extrabold">0</p>
                 </div>
                 <div>
                     <p class="text-momo-gray text-sm">剩余名额</p>
-                    <p id="remainCount" class="text-3xl font-extrabold mt-1">500</p>
+                    <p id="remainCount" class="text-2xl font-extrabold">500</p>
                 </div>
             </div>
-            <div class="mt-5 bg-momo-line rounded-full h-3 overflow-hidden">
+            <div class="mt-2 bg-momo-line rounded-full h-2.5 overflow-hidden">
                 <div id="progressBar" class="bg-momo-accent h-full transition-all duration-500" style="width: 0%"></div>
             </div>
-            <p class="text-center mt-2 text-sm text-momo-gray">本轮进度：<span id="progressPercent" class="font-bold text-momo-ink">0</span>%</p>
+            <p class="text-center mt-1 text-sm text-momo-gray">本轮进度：<span id="progressPercent" class="font-bold text-momo-ink">0</span>%</p>
         </div>
     </div>
 
-    <main class="w-[90%] mx-auto pb-16">
+    <main class="w-[90%] mx-auto pb-3 flex-1">
         <!-- 500格选号区 -->
-        <section class="mb-6">
-            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <h2 class="text-xl font-extrabold">每格=<span class="js-price">100</span>赛地商品+1次抽奖资格</h2>
+        <section class="mb-3">
+            <div class="flex items-center mb-2 flex-wrap gap-x-5 gap-y-2">
+                <h2 class="text-lg font-extrabold">每格=<span class="js-price">100</span>赛地商品+1次抽奖资格</h2>
                 <div class="flex items-center gap-3 text-sm">
                     <span class="flex items-center gap-1"><span class="w-4 h-4 bg-momo-accent rounded"></span> 可选</span>
                     <span class="flex items-center gap-1"><span class="w-4 h-4 bg-momo-locked text-white rounded flex items-center justify-center"><i class="fa fa-lock text-[10px]"></i></span> 已锁定</span>
                     <!-- 测试用：一键锁定全部格子 -->
                     <button id="selectAllBtn" type="button" class="px-3 py-0.5 bg-momo-ink text-momo-accent rounded-full hover:opacity-90">全选</button>
+                    <!-- 重置当前专场（清空本轮锁定数据，需二次确认） -->
+                    <button id="resetRoundBtn" type="button" class="px-3 py-0.5 bg-white border border-momo-red text-momo-red rounded-full hover:bg-momo-red hover:text-white">重置</button>
                 </div>
             </div>
 
@@ -135,24 +137,10 @@
         </section>
 
         <!-- 开始抽奖：500格全部锁定后才可进入抽奖 -->
-        <section class="mb-8">
-            <button id="drawBtn" type="button" class="w-full py-4 bg-momo-ink text-momo-accent font-extrabold rounded-full text-lg hover:opacity-90">
+        <section>
+            <button id="drawBtn" type="button" class="w-full py-3 bg-momo-ink text-momo-accent font-extrabold rounded-full text-lg hover:opacity-90">
                 开始抽奖
             </button>
-        </section>
-
-        <!-- 管理员区 -->
-        <section class="bg-white p-5 rounded-2xl shadow-sm">
-            <h3 class="font-extrabold mb-3">🔐 管理员操作区（<span class="js-price">100</span>赛地专场）</h3>
-            <div class="flex gap-3 flex-wrap">
-                <button id="resetRoundBtn" class="px-4 py-2 bg-white border-2 border-momo-red text-momo-red hover:bg-momo-red hover:text-white rounded-full text-sm font-bold">
-                    开启新一轮（清空数据）
-                </button>
-                <button id="exportDataBtn" class="px-4 py-2 bg-white border-2 border-momo-ink text-momo-ink hover:bg-momo-ink hover:text-white rounded-full text-sm font-bold">
-                    导出本轮数据
-                </button>
-            </div>
-            <p class="mt-3 text-xs text-momo-gray">只对当前场次生效；重置后当前轮数据不可恢复，建议先导出保存</p>
         </section>
     </main>
 
@@ -167,9 +155,8 @@
         </div>
     </div>
 
-    <footer class="bg-momo-ink py-5 text-center text-sm text-gray-400">
-        <p class="text-momo-accent font-bold"><span class="js-price">100</span>赛地购物赢大奖 · 官方活动平台</p>
-        <p class="mt-1">加纳 · 阿克拉 | 依法合规运营</p>
+    <footer class="bg-momo-ink py-2 text-center text-xs text-gray-400">
+        <p><span class="text-momo-accent font-bold"><span class="js-price">100</span>赛地购物赢大奖 · 官方活动平台</span>　加纳 · 阿克拉 | 依法合规运营</p>
     </footer>
 
     <script>
@@ -449,38 +436,16 @@
             progressPercentEl.textContent = percent;
         }
 
-        // ========== 管理员工具（只作用于当前场次） ==========
+        // ========== 重置（只作用于当前专场，需二次确认） ==========
         document.getElementById('resetRoundBtn').addEventListener('click', () => {
             const price = CONFIG.ROUNDS[currentRound].price;
-            if (!confirm(`⚠️ 确定重置 ${price}赛地专场本轮？\n该场次数据将清空且不可恢复！\n建议先导出数据保存。`)) return;
+            if (!confirm(`⚠️ 确定重置 ${price}赛地专场？\n该专场所有锁定将清空且不可恢复！`)) return;
             if (!confirm('再次确认：开启全新一轮？')) return;
 
             soldSlots.clear();
             selectedSlots.clear();
             localStorage.removeItem(CONFIG.ROUNDS[currentRound].storageKey);
             refresh();
-            alert('✅ 已重置！');
-        });
-
-        document.getElementById('exportDataBtn').addEventListener('click', () => {
-            // 锁定即售出：导出已支付 + 当前锁定的名额
-            const sold = Array.from(new Set([...soldSlots, ...selectedSlots]));
-            const price = CONFIG.ROUNDS[currentRound].price;
-            const data = {
-                round: `${price}赛地专场`,
-                roundDate: new Date().toLocaleString('zh-CN'),
-                totalSlots: CONFIG.TOTAL_SLOTS,
-                soldCount: sold.length,
-                soldSlotNumbers: sold.sort((a, b) => a - b)
-            };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `round-${price}-data-${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            alert('✅ 数据已导出！');
         });
 
         // PWA：注册 Service Worker（需通过 https 或 localhost 访问；双击本地文件打开时自动跳过）
