@@ -1,11 +1,12 @@
 /*
  * Service Worker：离线缓存
  * - 首次打开时预缓存本站全部文件（含抽奖页与音乐）
- * - 之后优先用缓存秒开，同时在后台联网更新缓存（stale-while-revalidate）
+ * - 网页本身优先联网取最新版（刷新即更新），断网时用缓存
+ * - 其它文件优先用缓存秒开，同时在后台联网更新缓存（stale-while-revalidate）
  * - 外部 CDN（Tailwind、图标字体）也会缓存，断网时页面样式不丢
  * 更新网站文件后，把 CACHE_VERSION 改一个新值，用户下次打开会自动换成新版本
  */
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = 'saidi200-' + CACHE_VERSION;
 
 const PRECACHE = [
@@ -76,6 +77,19 @@ self.addEventListener('fetch', (event) => {
     if (req.method !== 'GET') return;
     if (req.headers.has('range')) {
         event.respondWith(rangeFromCache(req));
+        return;
+    }
+
+    // 网页本身（index.html 等）：优先联网取最新版，刷新就能看到更新；断网时再用缓存
+    if (req.mode === 'navigate') {
+        event.respondWith(
+            fetch(req)
+                .then((res) => {
+                    if (res && res.ok) caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));
+                    return res;
+                })
+                .catch(() => caches.open(CACHE_NAME).then((cache) => cache.match(req, { ignoreSearch: true })))
+        );
         return;
     }
 

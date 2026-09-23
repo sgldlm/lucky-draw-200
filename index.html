@@ -172,8 +172,8 @@
                 100: { price: 100, drawUrl: 'lucky-draw/index.html?round=100#/', storageKey: 'shopwin_round_data_100', color: '#FF9F1C' }
             },
 
-            // 记住上次打开的场次
-            CURRENT_ROUND_KEY: 'shopwin_current_round'
+            // 打开 / 刷新页面时固定进入的场次
+            DEFAULT_ROUND: '100'
         };
         // ============== 配置区结束 ==============
 
@@ -244,7 +244,6 @@
             });
             document.title = `${price}赛地 · 购物赢大奖 —官方活动平台`;
             themeColorMeta.setAttribute('content', CONFIG.ROUNDS[round].color);
-            try { localStorage.setItem(CONFIG.CURRENT_ROUND_KEY, round); } catch (e) {}
 
             refresh();
         }
@@ -447,9 +446,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             initGrid();
             Object.keys(CONFIG.ROUNDS).forEach(loadData);
-            let saved = '100'; // 默认进入排在前面的 100赛地专场
-            try { saved = localStorage.getItem(CONFIG.CURRENT_ROUND_KEY) || '100'; } catch (e) {}
-            switchRound(saved);
+            // 每次打开 / 刷新都进入 100赛地专场
+            try { localStorage.removeItem('shopwin_current_round'); } catch (e) {} // 清掉旧版本记住的场次
+            switchRound(CONFIG.DEFAULT_ROUND);
         });
     </script>
 </body>
