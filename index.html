@@ -19,7 +19,7 @@
             theme: {
                 extend: {
                     colors: {
-                        // 加纳 MoMo 风格：主色 + 黑为主，浅灰底白卡片，高对比
+                        // 旧版浅色配色（页面现使用下方 <style> 中的深色舞台 + 主色发光设计）
                         momo: {
                             accent: 'var(--accent)', // 场次主色：200赛地专场 MoMo 黄，100赛地专场 橙色
                             ink: '#111111',          // 主文字 / 黑色按钮
@@ -38,9 +38,133 @@
         }
     </script>
     <style>
-        /* 两个场次的主色 */
-        :root { --accent: #FFCC00; }
-        body[data-round="100"] { --accent: #FF9F1C; }
+        /* ===== 两个专场的配色（户外大屏：深色舞台底 + 高饱和主色发光） =====
+           --accent 主色；--accent-hi 高光色；--accent-lo 深色端；--glow 光晕 */
+        :root {
+            --accent: #FFCC00; --accent-hi: #FFF06A; --accent-lo: #FF8A00;
+            --glow: rgba(255, 204, 0, 0.55); --glow-soft: rgba(255, 204, 0, 0.18);
+            --stage: #07070C;
+        }
+        body[data-round="100"] {
+            --accent: #FF9F1C; --accent-hi: #FFD36B; --accent-lo: #FF3D00;
+            --glow: rgba(255, 110, 20, 0.6); --glow-soft: rgba(255, 110, 20, 0.2);
+        }
+
+        /* 页面底：深色舞台 + 主色柔光 */
+        body { background-color: var(--stage); color: #fff; }
+        body::before {
+            content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% 0%, var(--glow-soft), transparent 70%),
+                radial-gradient(ellipse 45% 40% at 0% 100%, var(--glow-soft), transparent 70%),
+                radial-gradient(ellipse 45% 40% at 100% 100%, var(--glow-soft), transparent 70%),
+                radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1.2px) 0 0 / 22px 22px,
+                var(--stage);
+        }
+
+        /* 顶栏：主色渐变 + 舞台放射光 */
+        .fx-header {
+            position: relative; overflow: hidden;
+            background: linear-gradient(115deg, var(--accent-hi) 0%, var(--accent) 45%, var(--accent-lo) 100%);
+            box-shadow: 0 10px 50px var(--glow);
+        }
+        .fx-header::before {
+            content: ""; position: absolute; inset: -50% -10% 0; pointer-events: none;
+            background: repeating-conic-gradient(from 0deg at 50% 100%, rgba(255, 255, 255, 0.22) 0deg 5deg, transparent 5deg 12deg);
+            -webkit-mask-image: radial-gradient(ellipse 60% 90% at 50% 100%, #000 30%, transparent 75%);
+                    mask-image: radial-gradient(ellipse 60% 90% at 50% 100%, #000 30%, transparent 75%);
+        }
+        .fx-header > * { position: relative; }
+        .fx-title { color: #111; text-shadow: 0 2px 0 rgba(255, 255, 255, 0.5), 0 6px 18px rgba(0, 0, 0, 0.18); letter-spacing: 0.02em; }
+
+        /* 专场切换 */
+        .round-tab {
+            border-radius: 9999px; font-weight: 800; color: #111;
+            border: 2px solid #111; background: rgba(255, 255, 255, 0.25);
+            transition: background-color .2s, color .2s, box-shadow .2s;
+        }
+        .round-tab:hover { background: rgba(255, 255, 255, 0.45); }
+        .round-tab.active { background: #111; color: var(--accent); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); }
+
+        /* 数据卡：深色发光玻璃 */
+        .fx-card {
+            background: linear-gradient(180deg, rgba(34, 34, 46, 0.94), rgba(14, 14, 20, 0.96));
+            border: 1px solid var(--accent);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset, 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px var(--glow-soft);
+            -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+        }
+        .fx-stat-label { color: #B9B9CC; letter-spacing: 0.08em; }
+        .fx-stat-num { color: #fff; text-shadow: 0 0 18px rgba(255, 255, 255, 0.25); }
+        .fx-stat-num.hot {
+            background: linear-gradient(180deg, var(--accent-hi), var(--accent) 60%, var(--accent-lo));
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            text-shadow: none; filter: drop-shadow(0 0 12px var(--glow));
+        }
+        .fx-divide > * + * { border-left: 1px solid rgba(255, 255, 255, 0.12); }
+        .fx-track { background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6); }
+        .fx-fill {
+            background:
+                repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.28) 0 10px, transparent 10px 22px),
+                linear-gradient(90deg, var(--accent-lo), var(--accent), var(--accent-hi));
+            background-size: 44px 100%, 100% 100%;
+            box-shadow: 0 0 14px var(--glow);
+            animation: fx-flow 1.2s linear infinite;
+        }
+        @keyframes fx-flow { to { background-position: 44px 0, 0 0; } }
+        .fx-muted { color: #A6A6B8; }
+        .fx-accent { color: var(--accent); }
+
+        /* 图例 */
+        .fx-legend-title { color: #fff; }
+        .fx-legend-items { color: #D4D4E0; }
+        .fx-btn-all { background: linear-gradient(180deg, var(--accent-hi), var(--accent)); color: #111; font-weight: 700; box-shadow: 0 0 14px var(--glow-soft); }
+        .fx-btn-reset { border: 1px solid #FF6B6B; color: #FF8A8A; background: rgba(255, 80, 80, 0.08); }
+        .fx-btn-reset:hover { background: #E53935; color: #fff; border-color: #E53935; }
+
+        /* 格子：立体按钮质感 */
+        .cell-available {
+            background: linear-gradient(160deg, var(--accent-hi) 0%, var(--accent) 50%, var(--accent-lo) 100%);
+            color: #111;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -2px 0 rgba(0, 0, 0, 0.22);
+        }
+        .cell-available:hover {
+            background: #fff; color: #111; position: relative; z-index: 2;
+            transform: scale(1.18); box-shadow: 0 0 18px var(--glow), 0 0 0 2px var(--accent);
+        }
+        .cell-locked {
+            background: linear-gradient(160deg, #474755 0%, #2A2A34 60%, #1E1E26 100%);
+            color: rgba(255, 255, 255, 0.9);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 0 rgba(0, 0, 0, 0.45);
+        }
+        .swatch-available { background: linear-gradient(160deg, var(--accent-hi), var(--accent) 50%, var(--accent-lo)); }
+        .swatch-locked { background: linear-gradient(160deg, #474755, #1E1E26); color: #fff; }
+
+        /* 开始抽奖：流光渐变；500格全部锁定后变亮并呼吸闪光 */
+        .fx-draw {
+            color: #111; font-weight: 900; letter-spacing: 0.35em; text-indent: 0.35em;
+            background: linear-gradient(90deg, var(--accent-lo), var(--accent), var(--accent-hi), var(--accent), var(--accent-lo));
+            background-size: 200% 100%;
+            animation: fx-shift 4s linear infinite;
+            opacity: 0.55; filter: saturate(0.7);
+            transition: opacity .3s, filter .3s;
+        }
+        .fx-draw.ready {
+            opacity: 1; filter: none;
+            animation: fx-shift 2.5s linear infinite, fx-pulse 1.4s ease-in-out infinite;
+        }
+        @keyframes fx-shift { to { background-position: -200% 0; } }
+        @keyframes fx-pulse {
+            0%, 100% { box-shadow: 0 0 18px var(--glow), 0 0 0 0 var(--glow); }
+            50% { box-shadow: 0 0 46px var(--glow), 0 0 0 10px rgba(0, 0, 0, 0); }
+        }
+
+        /* 页脚 */
+        .fx-footer { background: #000; border-top: 2px solid var(--accent); box-shadow: 0 -6px 30px var(--glow-soft); color: #8C8CA0; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .fx-fill, .fx-draw, .fx-draw.ready { animation: none; }
+        }
+
         /* 每行格数：电脑 / 大屏（LED）每行 50 格；手机、平板每行 20 格（50 格在窄屏上太小无法点选） */
         #gridContainer {
             --cols: 20;
@@ -79,31 +203,17 @@
     <style type="text/tailwindcss">
         @layer utilities {
             .grid-cell {
-                @apply w-full aspect-square rounded-md flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors duration-150 font-extrabold leading-none;
-            }
-            /* 可选：主色底黑字，悬停反色 */
-            .cell-available {
-                @apply bg-momo-accent text-momo-ink hover:bg-momo-ink hover:text-momo-accent;
-            }
-            /* 已锁定：深灰底 + 白色锁 */
-            .cell-locked {
-                @apply bg-momo-locked text-white;
-            }
-            /* 场次切换按钮 */
-            .round-tab {
-                @apply px-5 py-2 rounded-full font-extrabold text-base md:text-lg border-2 border-momo-ink text-momo-ink transition-colors;
-            }
-            .round-tab.active {
-                @apply bg-momo-ink text-momo-accent;
+                @apply w-full aspect-square rounded-md flex flex-col items-center justify-center gap-0.5 cursor-pointer font-extrabold leading-none;
+                transition: transform .12s, background-color .15s, box-shadow .15s;
             }
         }
     </style>
 </head>
-<body class="bg-momo-bg text-momo-ink min-h-screen flex flex-col" data-round="100">
-    <!-- 头部：场次主色顶栏 -->
-    <header class="bg-momo-accent transition-colors">
+<body class="min-h-screen flex flex-col" data-round="100">
+    <!-- 头部：主色渐变 + 舞台放射光 -->
+    <header class="fx-header">
         <div class="container mx-auto px-4 l-header text-center">
-            <h1 class="l-title font-extrabold tracking-tight text-momo-ink"><span class="js-price">100</span>赛地 · 购物赢大奖</h1>
+            <h1 class="l-title fx-title font-extrabold tracking-tight"><span class="js-price">100</span>赛地 · 购物赢大奖</h1>
             <!-- 场次切换 -->
             <div class="l-tabs inline-flex gap-3" role="tablist" aria-label="选择场次">
                 <button type="button" class="round-tab active" data-round="100" role="tab">100赛地专场</button>
@@ -114,25 +224,25 @@
 
     <!-- 实时数据卡片（压在顶栏下沿）；内容宽度占屏幕 90%、左右留白，格子和文字随宽度等比缩放，方便大 LED 屏使用 -->
     <div class="w-[90%] mx-auto l-card-wrap">
-        <div class="bg-white rounded-2xl l-card shadow-md">
-            <div class="grid grid-cols-3 text-center divide-x divide-momo-line">
+        <div class="fx-card rounded-2xl l-card">
+            <div class="grid grid-cols-3 text-center fx-divide">
                 <div>
-                    <p class="text-momo-gray l-stat-label">总名额</p>
-                    <p class="l-stat-num font-extrabold">500</p>
+                    <p class="fx-stat-label l-stat-label">总名额</p>
+                    <p class="l-stat-num fx-stat-num font-extrabold">500</p>
                 </div>
                 <div>
-                    <p class="text-momo-gray l-stat-label">已售出</p>
-                    <p id="soldCount" class="l-stat-num font-extrabold">0</p>
+                    <p class="fx-stat-label l-stat-label">已售出</p>
+                    <p id="soldCount" class="l-stat-num fx-stat-num hot font-extrabold">0</p>
                 </div>
                 <div>
-                    <p class="text-momo-gray l-stat-label">剩余名额</p>
-                    <p id="remainCount" class="l-stat-num font-extrabold">500</p>
+                    <p class="fx-stat-label l-stat-label">剩余名额</p>
+                    <p id="remainCount" class="l-stat-num fx-stat-num font-extrabold">500</p>
                 </div>
             </div>
-            <div class="l-progress bg-momo-line rounded-full overflow-hidden">
-                <div id="progressBar" class="bg-momo-accent h-full transition-all duration-500" style="width: 0%"></div>
+            <div class="l-progress fx-track rounded-full overflow-hidden">
+                <div id="progressBar" class="fx-fill h-full rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
-            <p class="text-center l-progress-text text-momo-gray">本轮进度：<span id="progressPercent" class="font-bold text-momo-ink">0</span>%</p>
+            <p class="text-center l-progress-text fx-muted">本轮进度：<span id="progressPercent" class="font-bold fx-accent">0</span>%</p>
         </div>
     </div>
 
@@ -140,14 +250,14 @@
         <!-- 500格选号区 -->
         <section>
             <div class="l-legend flex items-center justify-between flex-wrap gap-x-6 gap-y-2">
-                <h2 class="font-extrabold">每格=<span class="js-price">100</span>赛地商品+1次抽奖资格</h2>
-                <div class="l-legend-items flex items-center gap-4">
-                    <span class="flex items-center gap-1"><span class="swatch bg-momo-accent rounded"></span> 可选</span>
-                    <span class="flex items-center gap-1"><span class="swatch bg-momo-locked text-white rounded flex items-center justify-center"><i class="fa fa-lock" style="font-size:.65em"></i></span> 已锁定</span>
+                <h2 class="fx-legend-title font-extrabold">每格=<span class="js-price fx-accent">100</span>赛地商品+1次抽奖资格</h2>
+                <div class="l-legend-items fx-legend-items flex items-center gap-4">
+                    <span class="flex items-center gap-1"><span class="swatch swatch-available rounded"></span> 可选</span>
+                    <span class="flex items-center gap-1"><span class="swatch swatch-locked rounded flex items-center justify-center"><i class="fa fa-lock" style="font-size:.65em"></i></span> 已锁定</span>
                     <!-- 测试用：一键锁定全部格子 -->
-                    <button id="selectAllBtn" type="button" class="px-4 py-1 bg-momo-ink text-momo-accent rounded-full hover:opacity-90">全选</button>
+                    <button id="selectAllBtn" type="button" class="px-4 py-1 fx-btn-all rounded-full hover:opacity-90">全选</button>
                     <!-- 重置当前专场（清空本轮锁定数据，需二次确认） -->
-                    <button id="resetRoundBtn" type="button" class="px-4 py-1 bg-white border border-momo-red text-momo-red rounded-full hover:bg-momo-red hover:text-white">重置</button>
+                    <button id="resetRoundBtn" type="button" class="px-4 py-1 fx-btn-reset rounded-full">重置</button>
                 </div>
             </div>
 
@@ -156,9 +266,9 @@
             </div>
         </section>
 
-        <!-- 开始抽奖：500格全部锁定后才可进入抽奖 -->
+        <!-- 开始抽奖：500格全部锁定后才可进入抽奖（全部锁定时按钮变亮并呼吸闪光） -->
         <section>
-            <button id="drawBtn" type="button" class="l-draw w-full bg-momo-ink text-momo-accent font-extrabold rounded-full hover:opacity-90">
+            <button id="drawBtn" type="button" class="l-draw fx-draw w-full rounded-full">
                 开始抽奖
             </button>
         </section>
@@ -167,7 +277,7 @@
     <!-- 抽奖页（全屏，嵌入 lucky-draw；每个场次一个独立的抽奖页）
          页面打开后在后台预先加载（不可见、3D球暂停、不放音乐），点"开始抽奖"时立即显示 -->
     <div id="drawView" class="fixed inset-0 z-50 bg-black flex flex-col invisible pointer-events-none">
-        <div class="bg-momo-accent h-1.5 shrink-0"></div>
+        <div class="h-1.5 shrink-0" style="background: linear-gradient(90deg, var(--accent-lo), var(--accent), var(--accent-hi))"></div>
         <!-- "返回"按钮在抽奖页顶栏内（lucky-draw/custom-music.js），点击后发消息关闭本层 -->
         <div class="relative flex-1">
             <iframe id="drawFrame200" data-round="200" title="200赛地专场抽奖" class="absolute inset-0 w-full h-full border-0 invisible" allow="fullscreen; autoplay"></iframe>
@@ -175,8 +285,8 @@
         </div>
     </div>
 
-    <footer class="bg-momo-ink l-footer text-center text-gray-400">
-        <p><span class="text-momo-accent font-bold"><span class="js-price">100</span>赛地购物赢大奖 · 官方活动平台</span>　加纳 · 阿克拉 | 依法合规运营</p>
+    <footer class="fx-footer l-footer text-center">
+        <p><span class="fx-accent font-bold"><span class="js-price">100</span>赛地购物赢大奖 · 官方活动平台</span>　加纳 · 阿克拉 | 依法合规运营</p>
     </footer>
 
     <script>
@@ -454,6 +564,8 @@
             remainCountEl.textContent = remain;
             progressBarEl.style.width = `${percent}%`;
             progressPercentEl.textContent = percent;
+            // 500格全部锁定：开始抽奖按钮变亮并呼吸闪光
+            document.getElementById('drawBtn').classList.toggle('ready', remain <= 0);
         }
 
         // ========== 重置（只作用于当前专场，需二次确认） ==========
