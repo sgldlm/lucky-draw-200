@@ -6,6 +6,7 @@
  * - 另选的音乐保存在本浏览器（IndexedDB），下次打开自动恢复；"清除音乐"回到固定音乐
  * - 抽奖开始/结束不会切换或打断歌曲
  * - 嵌在活动页里时，顶栏"抽奖结果"前面显示"返回"按钮，点击通知外层页面关闭抽奖页
+ * - 嵌在活动页里时会被提前在后台加载：收到外层"显示"通知前不放音乐、3D球暂停
  */
 (function () {
     var DB_NAME = 'custom-music';
@@ -26,6 +27,9 @@
     var origPlay = HTMLMediaElement.prototype.play;
     var ui = {};
     var userPaused = false;        // 用户主动暂停后，不再自动恢复播放
+    // 嵌在活动页里时，页面会被提前在后台加载；外层通知"显示"之前保持静音、3D球暂停
+    var embedded = window.parent !== window;
+    var shown = !embedded;
 
     // ---------- IndexedDB 存取 ----------
     function openDB() {
@@ -83,7 +87,38 @@
     }
 
     function tryAutoplay() {
-        if (audio.paused && !userPaused) audio.play().catch(function () {});
+        if (shown && audio.paused && !userPaused) audio.play().catch(function () {});
+    }
+
+    // ---------- 显示 / 隐藏（外层活动页通过 postMessage 通知） ----------
+    function pauseSphere(pause) {
+        if (!window.TagCanvas) return;
+        try { window.TagCanvas[pause ? 'Pause' : 'Resume']('rootcanvas'); } catch (e) {}
+    }
+
+    function setShown(value) {
+        shown = value;
+        if (shown) {
+            pauseSphere(false);
+            tryAutoplay();
+        } else {
+            pauseSphere(true);
+            audio.pause();
+        }
+    }
+
+    function listenParent() {
+        if (!embedded) return;
+        window.addEventListener('message', function (e) {
+            if (e.source !== window.parent || !e.data) return;
+            if (e.data.type === 'lucky-draw:show') setShown(true);
+            if (e.data.type === 'lucky-draw:hide') setShown(false);
+        });
+        // 隐藏期间保持 3D 球暂停（抽奖程序在窗口尺寸变化时会重建 3D 球）
+        setInterval(function () { if (!shown) pauseSphere(true); }, 500);
+        pauseSphere(true);
+        // 告诉外层已加载完成，外层回复当前应显示还是隐藏
+        window.parent.postMessage({ type: 'lucky-draw:ready' }, '*');
     }
 
     // ---------- 界面 ----------
@@ -173,12 +208,8 @@
         back.type = 'button';
         back.textContent = '← 返回';
         back.addEventListener('click', function () {
-            audio.pause();   // 离开抽奖页时暂停，避免隐藏后还在后台播放
+            setShown(false);   // 离开抽奖页时暂停音乐和3D球，避免隐藏后还在后台运行
             window.parent.postMessage({ type: 'lucky-draw:back' }, '*');
-        });
-        // 外层页面再次打开抽奖页时通知这里，继续播放
-        window.addEventListener('message', function (e) {
-            if (e.source === window.parent && e.data && e.data.type === 'lucky-draw:show') tryAutoplay();
         });
         document.body.appendChild(back);
 
@@ -207,7 +238,7 @@
         audio.load = function () {};
         // 抽奖程序开始抽奖时会自行调用 play()；用户已暂停时不理会
         audio.play = function () {
-            if (userPaused) return Promise.resolve();
+            if (userPaused || !shown) return Promise.resolve();
             return origPlay.call(audio);
         };
         audio.addEventListener('play', updateUI);
@@ -220,6 +251,7 @@
             }
         });
         buildUI();
+        listenParent();
         applyTrack(false);   // 先装载固定音乐
         loadFiles().then(function (items) {
             if (items && items.length) {   // 之前另选过音乐则恢复

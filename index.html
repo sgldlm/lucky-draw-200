@@ -41,10 +41,10 @@
         /* 两个场次的主色 */
         :root { --accent: #FFCC00; }
         body[data-round="100"] { --accent: #FF9F1C; }
-        /* 格子里的数字 / 锁随格子大小缩放，窄屏时三位数也不会溢出 */
+        /* 格子里的数字 / 锁随格子大小缩放：窄屏不溢出，大屏（LED）自动放大 */
         #gridContainer { container-type: inline-size; }
-        #gridContainer .grid-cell { font-size: min(20px, 2.3cqi); }
-        #gridContainer .lock-icon { font-size: min(32px, 3.4cqi); }
+        #gridContainer .grid-cell { font-size: 2.3cqi; }
+        #gridContainer .lock-icon { font-size: 3.4cqi; }
     </style>
     <style type="text/tailwindcss">
         @layer utilities {
@@ -82,8 +82,8 @@
         </div>
     </header>
 
-    <!-- 实时数据卡片（压在顶栏下沿） -->
-    <div class="container mx-auto px-4 -mt-10 mb-6">
+    <!-- 实时数据卡片（压在顶栏下沿）；页面内容铺满整个屏幕宽度，方便大 LED 屏使用 -->
+    <div class="w-full px-4 lg:px-6 -mt-10 mb-6">
         <div class="bg-white rounded-2xl p-6 shadow-md">
             <div class="grid grid-cols-3 text-center divide-x divide-momo-line">
                 <div>
@@ -106,7 +106,7 @@
         </div>
     </div>
 
-    <main class="container mx-auto px-4 pb-16">
+    <main class="w-full px-4 lg:px-6 pb-16">
         <!-- 500格选号区 -->
         <section class="mb-6">
             <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
@@ -146,12 +146,15 @@
         </section>
     </main>
 
-    <!-- 抽奖页（全屏，嵌入 lucky-draw；每个场次一个独立的抽奖页） -->
-    <div id="drawView" class="fixed inset-0 z-50 bg-black flex-col hidden">
+    <!-- 抽奖页（全屏，嵌入 lucky-draw；每个场次一个独立的抽奖页）
+         页面打开后在后台预先加载（不可见、3D球暂停、不放音乐），点"开始抽奖"时立即显示 -->
+    <div id="drawView" class="fixed inset-0 z-50 bg-black flex flex-col invisible pointer-events-none">
         <div class="bg-momo-accent h-1.5 shrink-0"></div>
         <!-- "返回"按钮在抽奖页顶栏内（lucky-draw/custom-music.js），点击后发消息关闭本层 -->
-        <iframe id="drawFrame200" data-round="200" title="200赛地专场抽奖" class="w-full flex-1 border-0 hidden" allow="fullscreen; autoplay"></iframe>
-        <iframe id="drawFrame100" data-round="100" title="100赛地专场抽奖" class="w-full flex-1 border-0 hidden" allow="fullscreen; autoplay"></iframe>
+        <div class="relative flex-1">
+            <iframe id="drawFrame200" data-round="200" title="200赛地专场抽奖" class="absolute inset-0 w-full h-full border-0 invisible" allow="fullscreen; autoplay"></iframe>
+            <iframe id="drawFrame100" data-round="100" title="100赛地专场抽奖" class="absolute inset-0 w-full h-full border-0 invisible" allow="fullscreen; autoplay"></iframe>
+        </div>
     </div>
 
     <footer class="bg-momo-ink py-5 text-center text-sm text-gray-400">
@@ -352,25 +355,60 @@
             return soldSlots.size + selectedSlots.size >= CONFIG.TOTAL_SLOTS;
         }
 
+        let openRound = null; // 当前显示中的抽奖页场次；null 表示抽奖页未打开
+
+        // 抽奖页地址还没设置就设置（开始加载）
+        function ensureFrameLoaded(round) {
+            const frame = drawFrames[round];
+            if (!frame.getAttribute('src')) frame.src = CONFIG.ROUNDS[round].drawUrl;
+        }
+
+        // 通知抽奖页：显示中（3D球转动、播放音乐）或已隐藏（暂停）
+        function tellFrame(round) {
+            const w = drawFrames[round].contentWindow;
+            if (w) w.postMessage({ type: openRound === round ? 'lucky-draw:show' : 'lucky-draw:hide' }, '*');
+        }
+
+        function openDraw(round) {
+            ensureFrameLoaded(round);
+            openRound = round;
+            Object.entries(drawFrames).forEach(([r, f]) => f.classList.toggle('invisible', r !== round));
+            drawView.classList.remove('invisible', 'pointer-events-none');
+            document.body.style.overflow = 'hidden';
+            tellFrame(round);
+        }
+
+        function closeDraw() {
+            const round = openRound;
+            openRound = null;
+            Object.values(drawFrames).forEach((f) => f.classList.add('invisible'));
+            drawView.classList.add('invisible', 'pointer-events-none');
+            document.body.style.overflow = '';
+            if (round) tellFrame(round);
+        }
+
         document.getElementById('drawBtn').addEventListener('click', () => {
             if (!allLocked()) return;
-            const frame = drawFrames[currentRound];
-            if (!frame.src) frame.src = CONFIG.ROUNDS[currentRound].drawUrl; // 首次进入才加载
-            else frame.contentWindow.postMessage({ type: 'lucky-draw:show' }, '*'); // 再次进入：继续播放音乐
-            Object.values(drawFrames).forEach((f) => f.classList.toggle('hidden', f !== frame));
-            drawView.classList.remove('hidden');
-            drawView.classList.add('flex');
-            document.body.style.overflow = 'hidden';
+            openDraw(currentRound);
         });
 
-        // 抽奖页顶栏的"返回"按钮通过 postMessage 通知关闭
         window.addEventListener('message', (e) => {
-            const fromDrawPage = Object.values(drawFrames).some((f) => f.contentWindow === e.source);
-            if (!fromDrawPage) return;
-            if (!e.data || e.data.type !== 'lucky-draw:back') return;
-            drawView.classList.add('hidden');
-            drawView.classList.remove('flex');
-            document.body.style.overflow = '';
+            const entry = Object.entries(drawFrames).find(([, f]) => f.contentWindow === e.source);
+            if (!entry || !e.data) return;
+            const round = entry[0];
+            // 抽奖页加载完成后询问自己当前是否应显示（预加载时为隐藏）
+            if (e.data.type === 'lucky-draw:ready') tellFrame(round);
+            // 抽奖页顶栏的"返回"按钮
+            if (e.data.type === 'lucky-draw:back' && openRound === round) closeDraw();
+        });
+
+        // 预加载：页面打开 1 秒后在后台加载两个专场的抽奖页，点"开始抽奖"时无需等待
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                ensureFrameLoaded(currentRound);
+                const other = Object.keys(drawFrames).find((r) => r !== currentRound);
+                setTimeout(() => ensureFrameLoaded(other), 1500);
+            }, 1000);
         });
 
         // ========== 渲染格子状态 ==========
