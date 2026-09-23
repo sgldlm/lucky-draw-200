@@ -55,6 +55,26 @@
         /* 格子里的数字 / 锁随格子大小等比缩放（格子宽约 100cqi / 格数） */
         #gridContainer .grid-cell { font-size: calc(43cqi / var(--cols)); border-radius: calc(12cqi / var(--cols)); }
         #gridContainer .lock-icon { font-size: calc(68cqi / var(--cols)); }
+
+        /* ===== 版面节奏：间距和字号随屏幕高度伸缩 =====
+           大屏 / LED：更宽松、字更大，版面上下饱满；小屏：自动收紧，仍能一屏放下 */
+        .l-header { padding-top: clamp(10px, 3vh, 56px); padding-bottom: clamp(30px, 5.4vh, 100px); }
+        .l-title { font-size: clamp(1.6rem, min(3.2vw, 5.2vh), 3.6rem); line-height: 1.15; }
+        .l-tabs { margin-top: clamp(8px, 2.2vh, 28px); }
+        .l-tabs .round-tab { font-size: clamp(0.95rem, 1.9vh, 1.35rem); padding: clamp(6px, 1vh, 12px) clamp(18px, 2vw, 32px); }
+        .l-card-wrap { margin-top: calc(-1 * clamp(24px, 4.5vh, 64px)); }
+        .l-card { padding: clamp(10px, 2.2vh, 36px) clamp(16px, 2vw, 40px); }
+        .l-stat-label { font-size: clamp(0.8rem, 1.6vh, 1.15rem); }
+        .l-stat-num { font-size: clamp(1.4rem, 3.8vh, 3rem); line-height: 1.2; }
+        .l-progress { margin-top: clamp(8px, 2vh, 24px); height: clamp(8px, 1.2vh, 14px); }
+        .l-progress-text { margin-top: clamp(4px, 1vh, 12px); font-size: clamp(0.8rem, 1.5vh, 1.1rem); }
+        .l-main { padding-top: clamp(8px, 1.6vh, 40px); padding-bottom: clamp(8px, 1.6vh, 40px); }
+        .l-legend { margin-bottom: clamp(8px, 1.8vh, 24px); }
+        .l-legend h2 { font-size: clamp(1.05rem, 2.3vh, 1.75rem); }
+        .l-legend-items { font-size: clamp(0.85rem, 1.7vh, 1.2rem); }
+        .l-legend-items .swatch { width: 1.1em; height: 1.1em; }
+        .l-draw { margin-top: clamp(10px, 2vh, 48px); padding-top: clamp(10px, 1.9vh, 26px); padding-bottom: clamp(10px, 1.9vh, 26px); font-size: clamp(1.1rem, 2.4vh, 1.9rem); }
+        .l-footer { padding-top: clamp(6px, 1.2vh, 14px); padding-bottom: clamp(6px, 1.2vh, 14px); font-size: clamp(0.75rem, 1.4vh, 1rem); }
     </style>
     <style type="text/tailwindcss">
         @layer utilities {
@@ -82,10 +102,10 @@
 <body class="bg-momo-bg text-momo-ink min-h-screen flex flex-col" data-round="100">
     <!-- 头部：场次主色顶栏 -->
     <header class="bg-momo-accent transition-colors">
-        <div class="container mx-auto px-4 pt-3 pb-9 text-center">
-            <h1 class="text-[clamp(1.6rem,3vw,2.5rem)] font-extrabold tracking-tight text-momo-ink leading-tight"><span class="js-price">100</span>赛地 · 购物赢大奖</h1>
+        <div class="container mx-auto px-4 l-header text-center">
+            <h1 class="l-title font-extrabold tracking-tight text-momo-ink"><span class="js-price">100</span>赛地 · 购物赢大奖</h1>
             <!-- 场次切换 -->
-            <div class="mt-2 inline-flex gap-2" role="tablist" aria-label="选择场次">
+            <div class="l-tabs inline-flex gap-3" role="tablist" aria-label="选择场次">
                 <button type="button" class="round-tab active" data-round="100" role="tab">100赛地专场</button>
                 <button type="button" class="round-tab" data-round="200" role="tab">200赛地专场</button>
             </div>
@@ -93,41 +113,41 @@
     </header>
 
     <!-- 实时数据卡片（压在顶栏下沿）；内容宽度占屏幕 90%、左右留白，格子和文字随宽度等比缩放，方便大 LED 屏使用 -->
-    <div class="w-[90%] mx-auto -mt-7 mb-3">
-        <div class="bg-white rounded-2xl px-6 py-3 shadow-md">
+    <div class="w-[90%] mx-auto l-card-wrap">
+        <div class="bg-white rounded-2xl l-card shadow-md">
             <div class="grid grid-cols-3 text-center divide-x divide-momo-line">
                 <div>
-                    <p class="text-momo-gray text-sm">总名额</p>
-                    <p class="text-2xl font-extrabold">500</p>
+                    <p class="text-momo-gray l-stat-label">总名额</p>
+                    <p class="l-stat-num font-extrabold">500</p>
                 </div>
                 <div>
-                    <p class="text-momo-gray text-sm">已售出</p>
-                    <p id="soldCount" class="text-2xl font-extrabold">0</p>
+                    <p class="text-momo-gray l-stat-label">已售出</p>
+                    <p id="soldCount" class="l-stat-num font-extrabold">0</p>
                 </div>
                 <div>
-                    <p class="text-momo-gray text-sm">剩余名额</p>
-                    <p id="remainCount" class="text-2xl font-extrabold">500</p>
+                    <p class="text-momo-gray l-stat-label">剩余名额</p>
+                    <p id="remainCount" class="l-stat-num font-extrabold">500</p>
                 </div>
             </div>
-            <div class="mt-2 bg-momo-line rounded-full h-2.5 overflow-hidden">
+            <div class="l-progress bg-momo-line rounded-full overflow-hidden">
                 <div id="progressBar" class="bg-momo-accent h-full transition-all duration-500" style="width: 0%"></div>
             </div>
-            <p class="text-center mt-1 text-sm text-momo-gray">本轮进度：<span id="progressPercent" class="font-bold text-momo-ink">0</span>%</p>
+            <p class="text-center l-progress-text text-momo-gray">本轮进度：<span id="progressPercent" class="font-bold text-momo-ink">0</span>%</p>
         </div>
     </div>
 
-    <main class="w-[90%] mx-auto pb-3 flex-1">
+    <main class="w-[90%] mx-auto l-main flex-1 flex flex-col justify-center">
         <!-- 500格选号区 -->
-        <section class="mb-3">
-            <div class="flex items-center mb-2 flex-wrap gap-x-5 gap-y-2">
-                <h2 class="text-lg font-extrabold">每格=<span class="js-price">100</span>赛地商品+1次抽奖资格</h2>
-                <div class="flex items-center gap-3 text-sm">
-                    <span class="flex items-center gap-1"><span class="w-4 h-4 bg-momo-accent rounded"></span> 可选</span>
-                    <span class="flex items-center gap-1"><span class="w-4 h-4 bg-momo-locked text-white rounded flex items-center justify-center"><i class="fa fa-lock text-[10px]"></i></span> 已锁定</span>
+        <section>
+            <div class="l-legend flex items-center flex-wrap gap-x-6 gap-y-2">
+                <h2 class="font-extrabold">每格=<span class="js-price">100</span>赛地商品+1次抽奖资格</h2>
+                <div class="l-legend-items flex items-center gap-4">
+                    <span class="flex items-center gap-1"><span class="swatch bg-momo-accent rounded"></span> 可选</span>
+                    <span class="flex items-center gap-1"><span class="swatch bg-momo-locked text-white rounded flex items-center justify-center"><i class="fa fa-lock" style="font-size:.65em"></i></span> 已锁定</span>
                     <!-- 测试用：一键锁定全部格子 -->
-                    <button id="selectAllBtn" type="button" class="px-3 py-0.5 bg-momo-ink text-momo-accent rounded-full hover:opacity-90">全选</button>
+                    <button id="selectAllBtn" type="button" class="px-4 py-1 bg-momo-ink text-momo-accent rounded-full hover:opacity-90">全选</button>
                     <!-- 重置当前专场（清空本轮锁定数据，需二次确认） -->
-                    <button id="resetRoundBtn" type="button" class="px-3 py-0.5 bg-white border border-momo-red text-momo-red rounded-full hover:bg-momo-red hover:text-white">重置</button>
+                    <button id="resetRoundBtn" type="button" class="px-4 py-1 bg-white border border-momo-red text-momo-red rounded-full hover:bg-momo-red hover:text-white">重置</button>
                 </div>
             </div>
 
@@ -138,7 +158,7 @@
 
         <!-- 开始抽奖：500格全部锁定后才可进入抽奖 -->
         <section>
-            <button id="drawBtn" type="button" class="w-full py-3 bg-momo-ink text-momo-accent font-extrabold rounded-full text-lg hover:opacity-90">
+            <button id="drawBtn" type="button" class="l-draw w-full bg-momo-ink text-momo-accent font-extrabold rounded-full hover:opacity-90">
                 开始抽奖
             </button>
         </section>
@@ -155,7 +175,7 @@
         </div>
     </div>
 
-    <footer class="bg-momo-ink py-2 text-center text-xs text-gray-400">
+    <footer class="bg-momo-ink l-footer text-center text-gray-400">
         <p><span class="text-momo-accent font-bold"><span class="js-price">100</span>赛地购物赢大奖 · 官方活动平台</span>　加纳 · 阿克拉 | 依法合规运营</p>
     </footer>
 
