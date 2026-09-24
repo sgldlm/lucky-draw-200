@@ -18,7 +18,7 @@
     var ACCENT = ROUND === '100' ? '#FF9F1C' : '#FFCC00';
 
     // 页面固定音乐
-    var FIXED_TRACK = { name: '1998韩国歌曲 哎', url: 'media/fixed-music.mp3', fixed: true };
+    var FIXED_TRACK = { name: '1998韩国歌曲 哎', nameEn: '1998 Korean Song "Ae"', url: 'media/fixed-music.mp3', fixed: true };
 
     var playlist = [FIXED_TRACK];   // [{ name, url, fixed? }]
     var idx = 0;
@@ -123,10 +123,14 @@
     // 抽奖程序界面文字（整句匹配的短词）
     var EXACT_EN = {
         '共': 'Total', '名': '', '剩余': 'Remaining', '开始': 'Start', '停止': 'Stop', '重置': 'Reset',
-        '保存': 'Save', '取消': 'Cancel', '确定': 'OK', '提示': 'Notice', '警告': 'Warning'
+        '保存': 'Save', '取消': 'Cancel', '确定': 'OK', '提示': 'Notice', '警告': 'Warning',
+        '请选择': 'Select', '清空': 'Clear', '删除': 'Delete', '全部': 'All', '返回': 'Back'
     };
     // 抽奖程序界面文字（包含即替换的短语，长的优先）
     var PHRASE_EN = [
+        ['请输入对应的号码和名单(可直接从excel复制)，格式(号码 名字)，导入的名单将代替号码显示在抽奖中。如：',
+         'Enter numbers and names (you can paste from Excel), one per line as "number name". Imported names are shown instead of numbers in the draw. Example:'],
+        ['张三', 'Kwame'], ['李四', 'Ama'], ['王五', 'Kofi'],
         ['支持jpg和png，照片大小不能超过150kb,建议20-50kb，建议尺寸为160*160px', 'JPG/PNG only, max 150KB (20–50KB recommended), 160×160px'],
         ['(开启后将在全体成员[无论有无中奖]中抽奖)', '(draw from everyone, including previous winners)'],
         ['本次抽奖人数已超过本奖项的剩余人数', 'Exceeds the remaining winners for this prize'],
@@ -183,12 +187,47 @@
         ['点击选择照片', 'Click to choose a photo'],
         ['已选照片', 'Selected'],
         ['暂未选择', 'None'],
-        ['请选择照片', 'Please choose a photo']
+        ['请选择照片', 'Please choose a photo'],
+        // 下拉框组件自带提示
+        ['无匹配数据', 'No match'],
+        ['暂无数据', 'No data'],
+        ['无数据', 'No data'],
+        ['加载中', 'Loading'],
+        ['请输入搜索内容', 'Search'],
+        // 常见奖品名（只影响英文显示，不改动"抽奖配置"里保存的名称）
+        ['特等奖', 'Grand Prize'],
+        ['二等奖', 'Second Prize'],
+        ['三等奖', 'Third Prize'],
+        ['四等奖', 'Fourth Prize'],
+        ['五等奖', 'Fifth Prize'],
+        ['幸运奖', 'Lucky Prize'],
+        ['参与奖', 'Participation Prize'],
+        ['摩托车', 'Motorcycle'],
+        ['电动车', 'E-bike'],
+        ['自行车', 'Bicycle'],
+        ['手机', 'Smartphone'],
+        ['电视机', 'TV'],
+        ['电视', 'TV'],
+        ['冰箱', 'Refrigerator'],
+        ['洗衣机', 'Washing Machine'],
+        ['空调', 'Air Conditioner'],
+        ['笔记本电脑', 'Laptop'],
+        ['电脑', 'Computer'],
+        ['平板', 'Tablet'],
+        ['耳机', 'Headphones'],
+        ['音响', 'Speaker'],
+        ['现金', 'Cash'],
+        ['红包', 'Cash Gift'],
+        ['大奖', 'Grand Prize'],
+        ['奖品', 'Prize'],
+        // 中文标点 → 英文标点（放在最后）
+        ['、', ', '], ['，', ', '], ['：', ': '], ['；', '; '], ['（', ' ('], ['）', ')'],
+        ['！', '!'], ['？', '?'], ['。', '. ']
     ];
 
     function translateText(s) {
         var t = s.trim();
-        if (!t || !/[一-鿿]/.test(t)) return s;
+        if (!t || !/[一-鿿　-〿＀-￯]/.test(t)) return s; // 含中文字或中文标点才处理
         if (Object.prototype.hasOwnProperty.call(EXACT_EN, t)) return s.replace(t, EXACT_EN[t]);
         var out = s;
         for (var i = 0; i < PHRASE_EN.length; i++) {
@@ -217,11 +256,26 @@
             translateTree(n);
         }
     }
+    // 下拉框（只读输入框）里显示的选项文字，如"一等奖""一次抽取完"：它们放在输入框的值里，需要单独翻译。
+    // 只处理只读输入框，可输入的框（抽奖标题、奖项名称等）保持原值，避免改动保存的数据。
+    function translateInputs() {
+        if (LANG !== 'en') return;
+        var inputs = document.querySelectorAll('input[readonly]');
+        for (var i = 0; i < inputs.length; i++) {
+            var v = translateText(inputs[i].value);
+            if (v !== inputs[i].value) inputs[i].value = v;
+        }
+    }
+
     var langObserver = null;
     function startTranslating() {
         translateTree(document.body);
+        translateInputs();
         document.title = translateText(document.title);
         if (langObserver) return;
+        // 下拉框的值由程序直接写入，页面结构不变，定时检查一次
+        setInterval(translateInputs, 250);
+        document.addEventListener('click', function () { setTimeout(translateInputs, 0); }, true);
         langObserver = new MutationObserver(function (list) {
             list.forEach(function (m) {
                 if (m.type === 'characterData') translateTree(m.target);
@@ -371,7 +425,8 @@
         if (!ui.name) return;
         ui.reset.style.display = isCustom() ? '' : 'none';
         var t = playlist[idx];
-        ui.name.textContent = (audio.paused ? ui_('paused') : '♪ ') + t.name +
+        var trackName = (LANG === 'en' && t.nameEn) ? t.nameEn : t.name;
+        ui.name.textContent = (audio.paused ? ui_('paused') : '♪ ') + trackName +
             (playlist.length > 1 ? ' (' + (idx + 1) + '/' + playlist.length + ')' : ui_('loop'));
     }
 
