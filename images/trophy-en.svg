@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 260" role="img" aria-label="Grand prize trophy">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF6B0"/>
+      <stop offset="0.35" stop-color="#FFD23F"/>
+      <stop offset="0.7" stop-color="#F5A300"/>
+      <stop offset="1" stop-color="#B86E00"/>
+    </linearGradient>
+    <linearGradient id="goldSide" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#B86E00"/>
+      <stop offset="0.5" stop-color="#FFE066"/>
+      <stop offset="1" stop-color="#B86E00"/>
+    </linearGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3A3A46"/>
+      <stop offset="1" stop-color="#111118"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- 光晕 -->
+  <circle cx="110" cy="95" r="95" fill="url(#shine)" opacity="0.35"/>
+  <!-- 把手 -->
+  <path d="M52 48 C8 48 8 118 62 126" fill="none" stroke="url(#goldSide)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M168 48 C212 48 212 118 158 126" fill="none" stroke="url(#goldSide)" stroke-width="12" stroke-linecap="round"/>
+  <!-- 杯身 -->
+  <path d="M44 30 H176 V64 C176 118 146 148 110 150 C74 148 44 118 44 64 Z" fill="url(#gold)" stroke="#8A5200" stroke-width="3"/>
+  <!-- 杯口 -->
+  <ellipse cx="110" cy="30" rx="66" ry="10" fill="#FFE680" stroke="#8A5200" stroke-width="3"/>
+  <!-- 高光 -->
+  <path d="M64 44 C62 84 74 116 92 132" fill="none" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="7" stroke-linecap="round"/>
+  <!-- 星星 -->
+  <path d="M110 58 L118 80 L141 80 L122 94 L129 116 L110 103 L91 116 L98 94 L79 80 L102 80 Z" fill="#FFFFFF" fill-opacity="0.92" stroke="#B86E00" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- 杯颈 -->
+  <path d="M98 148 H122 L128 180 H92 Z" fill="url(#goldSide)" stroke="#8A5200" stroke-width="3"/>
+  <rect x="80" y="178" width="60" height="12" rx="4" fill="url(#gold)" stroke="#8A5200" stroke-width="3"/>
+  <!-- 底座 -->
+  <path d="M58 192 H162 L172 244 H48 Z" fill="url(#base)" stroke="#FFD23F" stroke-width="3"/>
+  <rect x="72" y="204" width="76" height="28" rx="5" fill="url(#gold)"/>
+  <text x="110" y="226" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="17" font-weight="900" fill="#3A2000" letter-spacing="1">PRIZE</text>
+  <!-- 闪光 -->
+  <g fill="#FFFFFF">
+    <path d="M190 20 L193 30 L203 33 L193 36 L190 46 L187 36 L177 33 L187 30 Z"/>
+    <path d="M26 150 L28 157 L35 159 L28 161 L26 168 L24 161 L17 159 L24 157 Z" opacity="0.85"/>
+    <path d="M196 150 L198 156 L204 158 L198 160 L196 166 L194 160 L188 158 L194 156 Z" opacity="0.7"/>
+  </g>
+</svg>

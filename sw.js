@@ -6,7 +6,7 @@
  * - 外部 CDN（Tailwind、图标字体）也会缓存，断网时页面样式不丢
  * 更新网站文件后，把 CACHE_VERSION 改一个新值，用户下次打开会自动换成新版本
  */
-const CACHE_VERSION = 'v16';
+const CACHE_VERSION = 'v18';
 const CACHE_NAME = 'saidi200-' + CACHE_VERSION;
 
 const PRECACHE = [
@@ -18,6 +18,7 @@ const PRECACHE = [
     'icons/icon-maskable-512.png',
     'icons/apple-touch-icon.png',
     'images/trophy.svg',
+    'images/trophy-en.svg',
     'images/gifts.svg',
     'lucky-draw/index.html',
     'lucky-draw/custom-music.js',
@@ -38,7 +39,8 @@ const PRECACHE = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(PRECACHE))
+            // cache: 'reload' 绕过浏览器 HTTP 缓存，确保新版本缓存的是服务器上的最新文件
+            .then((cache) => cache.addAll(PRECACHE.map((url) => new Request(url, { cache: 'reload' }))))
             .then(() => self.skipWaiting())
     );
 });
@@ -85,7 +87,7 @@ self.addEventListener('fetch', (event) => {
     // 网页本身（index.html 等）：优先联网取最新版，刷新就能看到更新；断网时再用缓存
     if (req.mode === 'navigate') {
         event.respondWith(
-            fetch(req)
+            fetch(req, { cache: 'no-cache' }) // 向服务器确认是否有新版本，不直接用浏览器旧缓存
                 .then((res) => {
                     if (res && res.ok) caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));
                     return res;
@@ -98,7 +100,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.open(CACHE_NAME).then((cache) =>
             cache.match(req, { ignoreSearch: true }).then((cached) => {
-                const network = fetch(req)
+                const network = fetch(req, { cache: 'no-cache' })
                     .then((res) => {
                         if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone());
                         return res;

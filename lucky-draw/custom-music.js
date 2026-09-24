@@ -26,6 +26,7 @@
     var origLoad = HTMLMediaElement.prototype.load;
     var origPlay = HTMLMediaElement.prototype.play;
     var ui = {};
+    var placeBack = null;         // 重新计算"返回"按钮位置（文字长度变化时调用）
     var userPaused = false;        // 用户主动暂停后，不再自动恢复播放
     // 嵌在活动页里时，页面会被提前在后台加载；外层通知"显示"之前保持静音、3D球暂停
     var embedded = window.parent !== window;
@@ -107,10 +108,154 @@
         }
     }
 
+    // ---------- 中英文（外层活动页一键切换，通过 postMessage 同步） ----------
+    var LANG = 'zh';
+    try { if (localStorage.getItem('shopwin_lang') === 'en') LANG = 'en'; } catch (e) {}
+
+    var UI = {
+        zh: { back: '← 返回', clear: '清除音乐', paused: '⏸ 已暂停 · ', loop: '（单曲循环）', round: '赛地专场',
+              pick: '单击：暂停 / 继续　双击：选择新音乐（可多选）' },
+        en: { back: '← Back', clear: 'Clear music', paused: '⏸ Paused · ', loop: ' (loop)', round: ' Cedis Special',
+              pick: 'Click: pause / play · Double-click: choose new music (multiple allowed)' }
+    };
+    function ui_(k) { return UI[LANG][k]; }
+
+    // 抽奖程序界面文字（整句匹配的短词）
+    var EXACT_EN = {
+        '共': 'Total', '名': '', '剩余': 'Remaining', '开始': 'Start', '停止': 'Stop', '重置': 'Reset',
+        '保存': 'Save', '取消': 'Cancel', '确定': 'OK', '提示': 'Notice', '警告': 'Warning'
+    };
+    // 抽奖程序界面文字（包含即替换的短语，长的优先）
+    var PHRASE_EN = [
+        ['支持jpg和png，照片大小不能超过150kb,建议20-50kb，建议尺寸为160*160px', 'JPG/PNG only, max 150KB (20–50KB recommended), 160×160px'],
+        ['(开启后将在全体成员[无论有无中奖]中抽奖)', '(draw from everyone, including previous winners)'],
+        ['本次抽奖人数已超过本奖项的剩余人数', 'Exceeds the remaining winners for this prize'],
+        ['此操作将移除该中奖号码，确认删除?', 'Remove this winning number?'],
+        ['此操作将重置所选数据，是否继续?', 'This will reset the selected data. Continue?'],
+        ['不允许上传大于150KB的图片', 'Images over 150KB are not allowed'],
+        ['请选择本次抽取的奖项', 'Please choose a prize'],
+        ['请选取本次抽取的奖项', 'Choose a prize'],
+        ['请选取本次抽取方式', 'Choose a mode'],
+        ['该奖项剩余人数不足', 'No winners left for this prize'],
+        ['必须输入本次抽取人数', 'Enter the number of winners'],
+        ['号码必须大于0的整数', 'Number must be a positive integer'],
+        ['你的浏览器不支持audio标签', ''],
+        ['(点击号码可以删除)', '(click a number to remove it)'],
+        ['重置全部数据', 'Reset all data'],
+        ['重置抽奖配置', 'Reset settings'],
+        ['重置抽奖结果', 'Reset results'],
+        ['重置名单', 'Reset list'],
+        ['重置照片', 'Reset photos'],
+        ['重置选项', 'Reset options'],
+        ['确定重置', 'Confirm reset'],
+        ['重置成功!', 'Reset done!'],
+        ['删除成功!', 'Removed!'],
+        ['幸运抽大奖', 'Lucky Grand Draw'],
+        ['抽奖结果：', ' Results: '],
+        ['抽奖结果:', ' Results: '],
+        ['抽奖结果', 'Results'],
+        ['抽奖配置', 'Settings'],
+        ['保存配置', 'Save'],
+        ['保存成功', 'Saved'],
+        ['保存失败', 'Save failed'],
+        ['导入名单', 'Import List'],
+        ['导入照片', 'Import Photos'],
+        ['立即抽奖', 'Draw Now'],
+        ['增加奖项', 'Add Prize'],
+        ['奖项名称', 'Prize name'],
+        ['抽奖标题', 'Title'],
+        ['抽奖总人数', 'Total entries'],
+        ['抽奖号码', 'Number'],
+        ['抽取奖项', 'Prize'],
+        ['抽取方式', 'Mode'],
+        ['抽取人数', 'Winners'],
+        ['全员参与', 'Everyone'],
+        ['一次抽取完', 'All at once'],
+        ['自定义', 'Custom'],
+        ['抽1人', '1 winner'],
+        ['抽5人', '5 winners'],
+        ['一等奖', 'First Prize'],
+        ['暂未抽取', 'Not drawn yet'],
+        ['暂未抽奖', 'Not drawn yet'],
+        ['没有数据', 'No data'],
+        ['已取消', 'Cancelled'],
+        ['照片选择', 'Photo'],
+        ['点击选择照片', 'Click to choose a photo'],
+        ['已选照片', 'Selected'],
+        ['暂未选择', 'None'],
+        ['请选择照片', 'Please choose a photo']
+    ];
+
+    function translateText(s) {
+        var t = s.trim();
+        if (!t || !/[一-鿿]/.test(t)) return s;
+        if (Object.prototype.hasOwnProperty.call(EXACT_EN, t)) return s.replace(t, EXACT_EN[t]);
+        var out = s;
+        for (var i = 0; i < PHRASE_EN.length; i++) {
+            if (out.indexOf(PHRASE_EN[i][0]) >= 0) out = out.split(PHRASE_EN[i][0]).join(PHRASE_EN[i][1]);
+        }
+        return out;
+    }
+    function translateTree(root) {
+        if (LANG !== 'en' || !root) return;
+        if (root.nodeType === 3) {
+            if (root.parentNode && root.parentNode.closest && root.parentNode.closest('#cm-box, script, style')) return;
+            var v = translateText(root.nodeValue);
+            if (v !== root.nodeValue) root.nodeValue = v;
+            return;
+        }
+        if (root.nodeType !== 1) return;
+        if (root.closest && root.closest('#cm-box, script, style')) return;
+        if (root.placeholder) { var p = translateText(root.placeholder); if (p !== root.placeholder) root.placeholder = p; }
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+        var n;
+        while ((n = walker.nextNode())) {
+            if (n.nodeType === 1) {
+                if (n.placeholder) { var q = translateText(n.placeholder); if (q !== n.placeholder) n.placeholder = q; }
+                continue;
+            }
+            translateTree(n);
+        }
+    }
+    var langObserver = null;
+    function startTranslating() {
+        translateTree(document.body);
+        document.title = translateText(document.title);
+        if (langObserver) return;
+        langObserver = new MutationObserver(function (list) {
+            list.forEach(function (m) {
+                if (m.type === 'characterData') translateTree(m.target);
+                else m.addedNodes.forEach(translateTree);
+            });
+            if (placeBack) placeBack(); // 顶栏按钮文字变长后，"返回"按钮位置跟着调整
+        });
+        langObserver.observe(document.body, { subtree: true, childList: true, characterData: true });
+        setTimeout(function () { if (placeBack) placeBack(); }, 300);
+    }
+    function applyCustomUIText() {
+        var back = document.getElementById('cm-back');
+        if (back) back.textContent = ui_('back');
+        var round = document.getElementById('cm-round');
+        if (round) round.textContent = ROUND + ui_('round');
+        if (ui.reset) ui.reset.textContent = ui_('clear');
+        if (ui.pick) ui.pick.title = ui_('pick');
+        updateUI();
+        if (placeBack) placeBack();
+    }
+    function setLang(l) {
+        if (l !== 'en' && l !== 'zh') return;
+        if (l === LANG) return;
+        if (LANG === 'en' && l === 'zh') { location.reload(); return; } // 英文切回中文：重新加载恢复原文
+        LANG = l;
+        applyCustomUIText();
+        startTranslating();
+    }
+
     function listenParent() {
         if (!embedded) return;
         window.addEventListener('message', function (e) {
             if (e.source !== window.parent || !e.data) return;
+            if (e.data.type === 'lucky-draw:lang') setLang(e.data.lang);
             if (e.data.type === 'lucky-draw:show') setShown(true);
             if (e.data.type === 'lucky-draw:hide') setShown(false);
         });
@@ -144,17 +289,17 @@
         // 顶栏左侧显示当前场次
         var roundLabel = document.createElement('div');
         roundLabel.id = 'cm-round';
-        roundLabel.textContent = ROUND + '赛地专场';
+        roundLabel.textContent = ROUND + ui_('round');
         document.body.appendChild(roundLabel);
 
         var box = document.createElement('div');
         box.id = 'cm-box';
         box.innerHTML =
-            '<button id="cm-pick" type="button" title="单击：暂停 / 继续　双击：选择新音乐（可多选）">' +
+            '<button id="cm-pick" type="button" title="' + ui_('pick') + '">' +
             '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>' +
             '</button>' +
             '<div id="cm-name"></div>' +
-            '<button id="cm-reset" type="button">清除音乐</button>' +
+            '<button id="cm-reset" type="button">' + ui_('clear') + '</button>' +
             '<input id="cm-file" type="file" accept="audio/*" multiple hidden>';
         document.body.appendChild(box);
 
@@ -206,28 +351,28 @@
         var back = document.createElement('button');
         back.id = 'cm-back';
         back.type = 'button';
-        back.textContent = '← 返回';
+        back.textContent = ui_('back');
         back.addEventListener('click', function () {
             setShown(false);   // 离开抽奖页时暂停音乐和3D球，避免隐藏后还在后台运行
             window.parent.postMessage({ type: 'lucky-draw:back' }, '*');
         });
         document.body.appendChild(back);
 
-        function place() {
+        placeBack = function () {
             var res = document.querySelector('#root header .el-button.res');
             if (!res) return;
             back.style.right = (window.innerWidth - res.getBoundingClientRect().left + 24) + 'px';
-        }
-        place();
-        window.addEventListener('resize', place);
+        };
+        placeBack();
+        window.addEventListener('resize', placeBack);
     }
 
     function updateUI() {
         if (!ui.name) return;
         ui.reset.style.display = isCustom() ? '' : 'none';
         var t = playlist[idx];
-        ui.name.textContent = (audio.paused ? '⏸ 已暂停 · ' : '♪ ') + t.name +
-            (playlist.length > 1 ? '（' + (idx + 1) + '/' + playlist.length + '）' : '（单曲循环）');
+        ui.name.textContent = (audio.paused ? ui_('paused') : '♪ ') + t.name +
+            (playlist.length > 1 ? ' (' + (idx + 1) + '/' + playlist.length + ')' : ui_('loop'));
     }
 
     // ---------- 接管抽奖程序的播放器 ----------
@@ -251,6 +396,7 @@
             }
         });
         buildUI();
+        if (LANG === 'en') startTranslating();
         listenParent();
         applyTrack(false);   // 先装载固定音乐
         loadFiles().then(function (items) {
