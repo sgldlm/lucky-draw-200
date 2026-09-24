@@ -162,8 +162,8 @@
         /* 今日大奖：发光横幅 */
         .fx-prize {
             display: inline-flex; align-items: center; gap: 0.45em;
-            padding: 0.3em 1.1em; border-radius: 9999px;
-            font-size: clamp(1.05rem, 2.5vh, 1.9rem); font-weight: 900; white-space: nowrap;
+            padding: 0.18em 1em; border-radius: 9999px; line-height: 1.35;
+            font-size: clamp(0.95rem, 2.4vh, 1.9rem); font-weight: 900; white-space: nowrap;
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02));
             border: 2px solid var(--accent);
             box-shadow: 0 0 22px var(--glow), inset 0 0 18px var(--glow-soft);
@@ -178,11 +178,22 @@
         }
         @keyframes fx-prize-glow { 0%, 100% { box-shadow: 0 0 16px var(--glow), inset 0 0 14px var(--glow-soft); } 50% { box-shadow: 0 0 34px var(--glow), inset 0 0 22px var(--glow-soft); } }
 
-        /* 顶部工具按钮：中英文切换 / 编辑 */
+        /* 顶部工具按钮：中英文切换 / 编辑（右侧小按钮，与专场按钮同一高度，位于奖杯左边） */
+        .fx-header > .tools {
+            position: absolute; z-index: 6; display: flex; gap: 6px; align-items: center;
+            right: calc(21.5vw - 78px);
+            bottom: clamp(30px, 5.4vh, 100px);
+            /* 与专场按钮同高，保证小按钮在同一行垂直居中 */
+            height: calc(clamp(0.95rem, 1.9vh, 1.35rem) * 1.5 + 2 * clamp(6px, 1vh, 12px) + 4px);
+        }
+        @media (max-width: 900px) { .fx-header > .tools { right: 12px; } }
+        @media (max-width: 640px) {
+            .fx-header > .tools { position: static; justify-content: center; margin: -22px 0 calc(clamp(24px, 4.5vh, 64px) + 12px); height: auto; }
+        }
         .tool-btn {
-            border-radius: 9999px; font-weight: 800; color: #111;
-            border: 2px dashed rgba(0, 0, 0, 0.55); background: rgba(255, 255, 255, 0.2);
-            font-size: clamp(0.85rem, 1.6vh, 1.1rem); padding: clamp(4px, 0.8vh, 10px) clamp(12px, 1.2vw, 20px);
+            border-radius: 9999px; font-weight: 700; color: #111; line-height: 1.2;
+            border: 1.5px dashed rgba(0, 0, 0, 0.5); background: rgba(255, 255, 255, 0.22);
+            font-size: clamp(0.72rem, 1.25vh, 0.9rem); padding: 3px 10px;
         }
         .tool-btn:hover { background: rgba(255, 255, 255, 0.45); }
         .tool-btn.on { background: #111; color: var(--accent); border-style: solid; border-color: #111; }
@@ -311,15 +322,15 @@
         <div class="container mx-auto px-4 l-header text-center">
             <h1 class="l-title fx-title font-extrabold tracking-tight" data-i18n="title">100赛地 · 购物赢大奖</h1>
             <!-- 场次切换 -->
-            <div class="l-tabs inline-flex flex-wrap justify-center items-center gap-3">
-                <div class="inline-flex gap-3" role="tablist" aria-label="选择场次">
-                    <button type="button" class="round-tab active" data-round="100" role="tab"><span data-i18n="tab100">100赛地专场</span></button>
-                    <button type="button" class="round-tab" data-round="200" role="tab"><span data-i18n="tab200">200赛地专场</span></button>
-                </div>
-                <!-- 中英文切换 / 编辑文字 -->
-                <button type="button" id="langBtn" class="tool-btn" title="中文 / English">EN</button>
-                <button type="button" id="editBtn" class="tool-btn">✎ 编辑</button>
+            <div class="l-tabs inline-flex gap-3" role="tablist" aria-label="选择场次">
+                <button type="button" class="round-tab active" data-round="100" role="tab"><span data-i18n="tab100">100赛地专场</span></button>
+                <button type="button" class="round-tab" data-round="200" role="tab"><span data-i18n="tab200">200赛地专场</span></button>
             </div>
+        </div>
+        <!-- 中英文切换 / 编辑文字：放在右侧（奖杯左边），不占中间布局 -->
+        <div class="tools">
+            <button type="button" id="langBtn" class="tool-btn" title="中文 / English">EN</button>
+            <button type="button" id="editBtn" class="tool-btn">✎ 编辑</button>
         </div>
     </header>
 
