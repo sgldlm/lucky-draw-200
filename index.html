@@ -139,23 +139,18 @@
         .swatch-available { background: linear-gradient(160deg, var(--accent-hi), var(--accent) 50%, var(--accent-lo)); }
         .swatch-locked { background: linear-gradient(160deg, #474755, #1E1E26); color: #fff; }
 
-        /* 开始抽奖：流光渐变；500格全部锁定后变亮并呼吸闪光 */
+        /* 开始抽奖：纯橙色按钮；500格全部锁定后外圈呼吸闪光 */
         .fx-draw {
             color: #111; font-weight: 900; letter-spacing: 0.35em; text-indent: 0.35em;
-            background: linear-gradient(90deg, var(--accent-lo), var(--accent), var(--accent-hi), var(--accent), var(--accent-lo));
-            background-size: 200% 100%;
-            animation: fx-shift 4s linear infinite;
-            opacity: 0.55; filter: saturate(0.7);
-            transition: opacity .3s, filter .3s;
+            background: #FF8A00;
+            box-shadow: 0 0 18px rgba(255, 138, 0, 0.35);
+            transition: background-color .2s;
         }
-        .fx-draw.ready {
-            opacity: 1; filter: none;
-            animation: fx-shift 2.5s linear infinite, fx-pulse 1.4s ease-in-out infinite;
-        }
-        @keyframes fx-shift { to { background-position: -200% 0; } }
+        .fx-draw:hover { background: #FF9A1F; }
+        .fx-draw.ready { animation: fx-pulse 1.4s ease-in-out infinite; }
         @keyframes fx-pulse {
-            0%, 100% { box-shadow: 0 0 18px var(--glow), 0 0 0 0 var(--glow); }
-            50% { box-shadow: 0 0 46px var(--glow), 0 0 0 10px rgba(0, 0, 0, 0); }
+            0%, 100% { box-shadow: 0 0 18px rgba(255, 138, 0, 0.55); }
+            50% { box-shadow: 0 0 48px rgba(255, 138, 0, 0.9); }
         }
 
         /* 页脚 */
