@@ -89,7 +89,12 @@
             filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 26px var(--glow));
             animation: fx-float 4s ease-in-out infinite;
         }
-        .hero > .deco-left { left: 1.5vw; object-position: left center; }
+        /* 礼品图：底边对齐到数据卡片约 80% 高度处（靠下摆放） */
+        .hero > .deco-left {
+            left: 1.5vw; top: auto; bottom: 9%; height: auto;
+            max-height: calc(91% - clamp(4px, 1vh, 16px)); /* 矮屏时不超出顶部 */
+            object-position: left bottom;
+        }
         .hero > .deco-right { right: 1.5vw; object-position: right center; animation-delay: -2s; scale: 0.9; transform-origin: right top; } /* 奖杯缩小 10% */
         @keyframes fx-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
         @media (max-width: 900px) { .hero > .deco { display: none; } }
