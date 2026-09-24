@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 240" role="img" aria-label="礼物和赛地金币">
+  <defs>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF4D4D"/>
+      <stop offset="1" stop-color="#B3121B"/>
+    </linearGradient>
+    <linearGradient id="redTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF7070"/>
+      <stop offset="1" stop-color="#D01F28"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2FD17A"/>
+      <stop offset="1" stop-color="#0B7A3E"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF3A0"/>
+      <stop offset="0.45" stop-color="#FFCC1F"/>
+      <stop offset="1" stop-color="#C47D00"/>
+    </linearGradient>
+    <linearGradient id="coinEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#A86400"/>
+      <stop offset="0.5" stop-color="#FFD84D"/>
+      <stop offset="1" stop-color="#A86400"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 大礼盒（红） -->
+  <rect x="20" y="92" width="130" height="118" rx="6" fill="url(#red)" stroke="#6E0A10" stroke-width="3"/>
+  <rect x="12" y="72" width="146" height="30" rx="6" fill="url(#redTop)" stroke="#6E0A10" stroke-width="3"/>
+  <rect x="74" y="72" width="22" height="138" fill="url(#gold)" stroke="#8A5200" stroke-width="2"/>
+  <!-- 蝴蝶结 -->
+  <path d="M85 72 C60 40 30 50 44 70 C52 80 72 76 85 72 Z" fill="url(#gold)" stroke="#8A5200" stroke-width="3"/>
+  <path d="M85 72 C110 40 140 50 126 70 C118 80 98 76 85 72 Z" fill="url(#gold)" stroke="#8A5200" stroke-width="3"/>
+  <circle cx="85" cy="72" r="9" fill="#FFE066" stroke="#8A5200" stroke-width="3"/>
+  <path d="M32 104 V196" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- 小礼盒（绿） -->
+  <rect x="150" y="140" width="74" height="70" rx="5" fill="url(#green)" stroke="#054022" stroke-width="3"/>
+  <rect x="145" y="128" width="84" height="18" rx="4" fill="#3BE08A" stroke="#054022" stroke-width="3"/>
+  <rect x="180" y="128" width="14" height="82" fill="url(#gold)" stroke="#8A5200" stroke-width="2"/>
+  <path d="M187 128 C172 108 154 114 162 126 C167 132 179 130 187 128 Z" fill="url(#gold)" stroke="#8A5200" stroke-width="2.5"/>
+  <path d="M187 128 C202 108 220 114 212 126 C207 132 195 130 187 128 Z" fill="url(#gold)" stroke="#8A5200" stroke-width="2.5"/>
+
+  <!-- 赛地金币（₵） -->
+  <g>
+    <rect x="96" y="196" width="76" height="12" rx="6" fill="url(#coinEdge)" stroke="#7A4600" stroke-width="2"/>
+    <rect x="96" y="186" width="76" height="12" rx="6" fill="url(#coinEdge)" stroke="#7A4600" stroke-width="2"/>
+    <rect x="96" y="176" width="76" height="12" rx="6" fill="url(#coinEdge)" stroke="#7A4600" stroke-width="2"/>
+    <ellipse cx="134" cy="176" rx="38" ry="10" fill="url(#gold)" stroke="#7A4600" stroke-width="2"/>
+  </g>
+  <g>
+    <circle cx="212" cy="96" r="30" fill="url(#coinEdge)" stroke="#7A4600" stroke-width="3"/>
+    <circle cx="212" cy="96" r="23" fill="url(#gold)" stroke="#A86400" stroke-width="2"/>
+    <text x="212" y="107" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="900" fill="#7A4600">₵</text>
+  </g>
+  <g>
+    <circle cx="232" cy="178" r="20" fill="url(#coinEdge)" stroke="#7A4600" stroke-width="2.5"/>
+    <circle cx="232" cy="178" r="15" fill="url(#gold)" stroke="#A86400" stroke-width="1.5"/>
+    <text x="232" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="900" fill="#7A4600">₵</text>
+  </g>
+
+  <!-- 闪光 -->
+  <g fill="#FFFFFF">
+    <path d="M178 40 L181 50 L191 53 L181 56 L178 66 L175 56 L165 53 L175 50 Z"/>
+    <path d="M10 40 L12 47 L19 49 L12 51 L10 58 L8 51 L1 49 L8 47 Z" opacity="0.8"/>
+  </g>
+</svg>

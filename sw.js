@@ -6,7 +6,7 @@
  * - 外部 CDN（Tailwind、图标字体）也会缓存，断网时页面样式不丢
  * 更新网站文件后，把 CACHE_VERSION 改一个新值，用户下次打开会自动换成新版本
  */
-const CACHE_VERSION = 'v13';
+const CACHE_VERSION = 'v14';
 const CACHE_NAME = 'saidi200-' + CACHE_VERSION;
 
 const PRECACHE = [
@@ -17,6 +17,8 @@ const PRECACHE = [
     'icons/icon-512.png',
     'icons/icon-maskable-512.png',
     'icons/apple-touch-icon.png',
+    'images/trophy.svg',
+    'images/gifts.svg',
     'lucky-draw/index.html',
     'lucky-draw/custom-music.js',
     'lucky-draw/round-storage.js',

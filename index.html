@@ -75,6 +75,31 @@
                     mask-image: radial-gradient(ellipse 60% 90% at 50% 100%, #000 30%, transparent 75%);
         }
         .fx-header > * { position: relative; }
+
+        /* 顶栏两侧插画：礼物+赛地金币（左）、奖杯（右）；只占顶栏两侧空白，不影响中间内容 */
+        .fx-header > .deco {
+            position: absolute; pointer-events: none; user-select: none;
+            top: clamp(6px, 1.6vh, 24px);
+            height: calc(100% - clamp(24px, 4.5vh, 64px) - clamp(12px, 3vh, 40px));
+            width: auto;
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.35));
+            animation: fx-float 4s ease-in-out infinite;
+        }
+        .fx-header > .deco-left { left: 7%; }
+        .fx-header > .deco-right { right: 7%; animation-delay: -2s; }
+        @keyframes fx-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
+        @media (max-width: 900px) { .fx-header > .deco { display: none; } }
+
+        /* 全屏彩带：加纳国旗色（红、金、绿）纸片缓缓飘落，位于内容后方 */
+        #confetti { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+        #confetti i {
+            position: absolute; top: -6vh; display: block; border-radius: 2px; opacity: 0.75;
+            animation: fx-fall linear infinite;
+        }
+        @keyframes fx-fall {
+            0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+            100% { transform: translate3d(var(--drift), 112vh, 0) rotate(var(--spin)); }
+        }
         .fx-title { color: #111; text-shadow: 0 2px 0 rgba(255, 255, 255, 0.5), 0 6px 18px rgba(0, 0, 0, 0.18); letter-spacing: 0.02em; }
 
         /* 专场切换 */
@@ -157,7 +182,8 @@
         .fx-footer { background: #000; border-top: 2px solid var(--accent); box-shadow: 0 -6px 30px var(--glow-soft); color: #8C8CA0; }
 
         @media (prefers-reduced-motion: reduce) {
-            .fx-fill, .fx-draw, .fx-draw.ready { animation: none; }
+            .fx-fill, .fx-draw, .fx-draw.ready, .fx-header > .deco { animation: none; }
+            #confetti { display: none; }
         }
 
         /* 每行格数：电脑 / 大屏（LED）每行 50 格；手机、平板每行 20 格（50 格在窄屏上太小无法点选） */
@@ -205,8 +231,13 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col" data-round="100">
-    <!-- 头部：主色渐变 + 舞台放射光 -->
+    <!-- 全屏彩带（JS 生成纸片） -->
+    <div id="confetti" aria-hidden="true"></div>
+
+    <!-- 头部：主色渐变 + 舞台放射光 + 两侧插画 -->
     <header class="fx-header">
+        <img class="deco deco-left" src="images/gifts.svg" alt="" aria-hidden="true">
+        <img class="deco deco-right" src="images/trophy.svg" alt="" aria-hidden="true">
         <div class="container mx-auto px-4 l-header text-center">
             <h1 class="l-title fx-title font-extrabold tracking-tight"><span class="js-price">100</span>赛地 · 购物赢大奖</h1>
             <!-- 场次切换 -->
@@ -574,6 +605,27 @@
             localStorage.removeItem(CONFIG.ROUNDS[currentRound].storageKey);
             refresh();
         });
+
+        // ========== 全屏彩带：加纳国旗色纸片（红、金、绿）+ 当前专场主色 ==========
+        (function makeConfetti() {
+            const box = document.getElementById('confetti');
+            const colors = ['#CE1126', '#FCD116', '#006B3F', 'var(--accent)', '#FFFFFF'];
+            const count = window.innerWidth < 768 ? 18 : 42;
+            const rand = (a, b) => a + Math.random() * (b - a);
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('i');
+                const w = rand(6, 12);
+                p.style.left = rand(0, 100) + 'vw';
+                p.style.width = w + 'px';
+                p.style.height = w * rand(0.4, 1.6) + 'px';
+                p.style.background = colors[i % colors.length];
+                p.style.animationDuration = rand(7, 16) + 's';
+                p.style.animationDelay = -rand(0, 16) + 's';
+                p.style.setProperty('--drift', rand(-12, 12) + 'vw');
+                p.style.setProperty('--spin', rand(-720, 720) + 'deg');
+                box.appendChild(p);
+            }
+        })();
 
         // PWA：注册 Service Worker（需通过 https 或 localhost 访问；双击本地文件打开时自动跳过）
         if ('serviceWorker' in navigator && location.protocol !== 'file:') {
