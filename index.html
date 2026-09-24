@@ -932,6 +932,19 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch((e) => console.warn('Service Worker 注册失败', e));
             });
+
+            // 网站有新版本并接管后，自动刷新一次换成新版（不用手动刷新两次）
+            // 为了不打扰正在进行的活动：有锁定的名额或抽奖页开着时不自动刷新，等下次打开再更新
+            const hadController = !!navigator.serviceWorker.controller; // 首次访问不刷新
+            let reloading = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!hadController || reloading) return;
+                const busy = openRound !== null ||
+                    Object.values(roundState).some((s) => s.selected.size > 0 || s.sold.size > 0);
+                if (busy) return;
+                reloading = true;
+                location.reload();
+            });
         }
 
         // 初始化
