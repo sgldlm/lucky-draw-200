@@ -308,6 +308,25 @@
             body[data-grid="100"] #gridContainer .lock-icon { font-size: 3.2cqi; }
         }
 
+        /* 200格的专场（200赛地专场）：200格铺满与500格完全相同大小的区域，每格放大
+           手机：10列×20行；电脑/大屏：25列×8行 */
+        body[data-grid="200"] #gridContainer {
+            --cols: 10;
+            grid-template-rows: repeat(20, minmax(0, 1fr));
+            height: calc((100cqi - 38px) * 1.25 + 48px);   /* = 500格在手机上的总高度 */
+        }
+        body[data-grid="200"] #gridContainer .grid-cell { aspect-ratio: auto; height: auto; font-size: 3.4cqi; }
+        body[data-grid="200"] #gridContainer .lock-icon { font-size: 4.5cqi; }
+        @media (min-width: 1024px) {
+            body[data-grid="200"] #gridContainer {
+                --cols: 25;
+                grid-template-rows: repeat(8, minmax(0, 1fr));
+                height: calc((100cqi - 196px) / 5 + 36px); /* = 500格在电脑上的总高度 */
+            }
+            body[data-grid="200"] #gridContainer .grid-cell { font-size: 1.45cqi; }
+            body[data-grid="200"] #gridContainer .lock-icon { font-size: 1.9cqi; }
+        }
+
         /* ===== 版面节奏：间距和字号随屏幕高度伸缩 =====
            大屏 / LED：更宽松、字更大，版面上下饱满；小屏：自动收紧，仍能一屏放下 */
         .l-header { padding-top: clamp(10px, 3vh, 56px); padding-bottom: clamp(30px, 5.4vh, 100px); }
@@ -462,7 +481,7 @@
             // 两个场次：单价、抽奖页地址、本地存储键名
             // 抽奖页为本地副本，基于开源项目 vitozyf/lucky-draw（MIT）；?round=100 让 100赛地专场的抽奖配置/结果单独保存
             ROUNDS: {
-                200: { price: 200, drawUrl: 'lucky-draw/index.html#/', storageKey: 'shopwin_round_data_v2', color: '#FFCC00' },
+                200: { price: 200, slots: 200, drawUrl: 'lucky-draw/index.html#/', storageKey: 'shopwin_round_data_v2', color: '#FFCC00' },
                 100: { price: 100, slots: 100, drawUrl: 'lucky-draw/index.html?round=100#/', storageKey: 'shopwin_round_data_100', color: '#FF9F1C' },
                 50: { price: 50, slots: 100, drawUrl: 'lucky-draw/index.html?round=50#/', storageKey: 'shopwin_round_data_50', color: '#2BE07A' }
             },
