@@ -76,19 +76,23 @@
         }
         .fx-header > * { position: relative; }
 
-        /* 顶栏两侧插画：礼物+赛地金币（左）、奖杯（右）；只占顶栏两侧空白，不影响中间内容 */
-        .fx-header > .deco {
-            position: absolute; pointer-events: none; user-select: none;
-            top: clamp(6px, 1.6vh, 24px);
-            height: calc(100% - clamp(24px, 4.5vh, 64px) - clamp(12px, 3vh, 40px));
-            width: auto;
-            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.35));
+        /* 两侧大插画：礼物+赛地金币（左）、奖杯（右）
+           从顶栏一直延伸到数据卡片的左上角 / 右上角，叠在卡片上层，形成跃出画面的气势；
+           宽度上限保证不遮挡"总名额""剩余名额"的数字 */
+        .hero { position: relative; }
+        .hero > .deco {
+            position: absolute; z-index: 5; pointer-events: none; user-select: none;
+            top: clamp(4px, 1vh, 16px);
+            bottom: 26%;
+            width: calc(20vw - 90px);
+            object-fit: contain;
+            filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 26px var(--glow));
             animation: fx-float 4s ease-in-out infinite;
         }
-        .fx-header > .deco-left { left: 7%; }
-        .fx-header > .deco-right { right: 7%; animation-delay: -2s; }
-        @keyframes fx-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
-        @media (max-width: 900px) { .fx-header > .deco { display: none; } }
+        .hero > .deco-left { left: 1.5vw; object-position: left center; }
+        .hero > .deco-right { right: 1.5vw; object-position: right center; animation-delay: -2s; }
+        @keyframes fx-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+        @media (max-width: 900px) { .hero > .deco { display: none; } }
 
         /* 全屏彩带：加纳国旗色（红、金、绿）纸片缓缓飘落，位于内容后方 */
         #confetti { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
@@ -182,7 +186,7 @@
         .fx-footer { background: #000; border-top: 2px solid var(--accent); box-shadow: 0 -6px 30px var(--glow-soft); color: #8C8CA0; }
 
         @media (prefers-reduced-motion: reduce) {
-            .fx-fill, .fx-draw, .fx-draw.ready, .fx-header > .deco { animation: none; }
+            .fx-fill, .fx-draw, .fx-draw.ready, .hero > .deco { animation: none; }
             #confetti { display: none; }
         }
 
@@ -234,10 +238,13 @@
     <!-- 全屏彩带（JS 生成纸片） -->
     <div id="confetti" aria-hidden="true"></div>
 
-    <!-- 头部：主色渐变 + 舞台放射光 + 两侧插画 -->
+    <!-- 顶部区域：顶栏 + 数据卡片；两侧大插画叠在上层 -->
+    <div class="hero">
+    <img class="deco deco-left" src="images/gifts.svg" alt="" aria-hidden="true">
+    <img class="deco deco-right" src="images/trophy.svg" alt="" aria-hidden="true">
+
+    <!-- 头部：主色渐变 + 舞台放射光 -->
     <header class="fx-header">
-        <img class="deco deco-left" src="images/gifts.svg" alt="" aria-hidden="true">
-        <img class="deco deco-right" src="images/trophy.svg" alt="" aria-hidden="true">
         <div class="container mx-auto px-4 l-header text-center">
             <h1 class="l-title fx-title font-extrabold tracking-tight"><span class="js-price">100</span>赛地 · 购物赢大奖</h1>
             <!-- 场次切换 -->
@@ -271,6 +278,7 @@
             <p class="text-center l-progress-text fx-muted">本轮进度：<span id="progressPercent" class="font-bold fx-accent">0</span>%</p>
         </div>
     </div>
+    </div><!-- /.hero -->
 
     <main class="w-[90%] mx-auto l-main flex-1 flex flex-col justify-center">
         <!-- 500格选号区 -->
