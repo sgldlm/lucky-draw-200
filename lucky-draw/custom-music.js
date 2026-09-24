@@ -431,7 +431,7 @@
     }
 
     // ---------- 接管抽奖程序的播放器 ----------
-    // 50赛地专场只有100个名额：抽奖程序"重置抽奖配置 / 重置全部数据"会把抽奖总人数恢复成默认500，这里改回100
+    // 50 / 100赛地专场只有100个名额：抽奖程序"重置抽奖配置 / 重置全部数据"会把抽奖总人数恢复成默认500，这里改回100
     function keepRoundNumber() {
         var number = window.LUCKY_DRAW_NUMBER;
         var root = document.getElementById('root');

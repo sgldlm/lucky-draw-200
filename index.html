@@ -288,24 +288,24 @@
         #gridContainer .grid-cell { font-size: calc(43cqi / var(--cols)); border-radius: calc(12cqi / var(--cols)); }
         #gridContainer .lock-icon { font-size: calc(68cqi / var(--cols)); }
 
-        /* 50赛地专场：100格铺满与500格完全相同大小的区域，每格放大
+        /* 100格的专场（50、100赛地专场）：100格铺满与500格完全相同大小的区域，每格放大
            手机：10列×10行（500格为20列×25行）；电脑/大屏：20列×5行（500格为50列×10行） */
         .grid-wrap { container-type: inline-size; }
-        body[data-round="50"] #gridContainer {
+        body[data-grid="100"] #gridContainer {
             --cols: 10;
             grid-template-rows: repeat(10, minmax(0, 1fr));
             height: calc((100cqi - 38px) * 1.25 + 48px);   /* = 500格在手机上的总高度 */
         }
-        body[data-round="50"] #gridContainer .grid-cell { aspect-ratio: auto; height: auto; font-size: 5cqi; }
-        body[data-round="50"] #gridContainer .lock-icon { font-size: 7cqi; }
+        body[data-grid="100"] #gridContainer .grid-cell { aspect-ratio: auto; height: auto; font-size: 5cqi; }
+        body[data-grid="100"] #gridContainer .lock-icon { font-size: 7cqi; }
         @media (min-width: 1024px) {
-            body[data-round="50"] #gridContainer {
+            body[data-grid="100"] #gridContainer {
                 --cols: 20;
                 grid-template-rows: repeat(5, minmax(0, 1fr));
                 height: calc((100cqi - 196px) / 5 + 36px); /* = 500格在电脑上的总高度 */
             }
-            body[data-round="50"] #gridContainer .grid-cell { font-size: 2.5cqi; }
-            body[data-round="50"] #gridContainer .lock-icon { font-size: 3.2cqi; }
+            body[data-grid="100"] #gridContainer .grid-cell { font-size: 2.5cqi; }
+            body[data-grid="100"] #gridContainer .lock-icon { font-size: 3.2cqi; }
         }
 
         /* ===== 版面节奏：间距和字号随屏幕高度伸缩 =====
@@ -338,7 +338,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col" data-round="100">
+<body class="min-h-screen flex flex-col" data-round="100" data-grid="100">
     <!-- 全屏彩带（JS 生成纸片） -->
     <div id="confetti" aria-hidden="true"></div>
 
@@ -463,7 +463,7 @@
             // 抽奖页为本地副本，基于开源项目 vitozyf/lucky-draw（MIT）；?round=100 让 100赛地专场的抽奖配置/结果单独保存
             ROUNDS: {
                 200: { price: 200, drawUrl: 'lucky-draw/index.html#/', storageKey: 'shopwin_round_data_v2', color: '#FFCC00' },
-                100: { price: 100, drawUrl: 'lucky-draw/index.html?round=100#/', storageKey: 'shopwin_round_data_100', color: '#FF9F1C' },
+                100: { price: 100, slots: 100, drawUrl: 'lucky-draw/index.html?round=100#/', storageKey: 'shopwin_round_data_100', color: '#FF9F1C' },
                 50: { price: 50, slots: 100, drawUrl: 'lucky-draw/index.html?round=50#/', storageKey: 'shopwin_round_data_50', color: '#2BE07A' }
             },
 
@@ -498,7 +498,9 @@
                 try {
                     const data = JSON.parse(stored);
                     if (data.soldSlots && Array.isArray(data.soldSlots)) {
-                        roundState[round].sold = new Set(data.soldSlots);
+                        // 只保留在当前名额范围内的号码（名额数改小后，超出的旧号码自动忽略）
+                        const max = CONFIG.ROUNDS[round].slots || CONFIG.TOTAL_SLOTS;
+                        roundState[round].sold = new Set(data.soldSlots.filter((n) => n >= 1 && n <= max));
                         return true;
                     }
                 } catch (e) {
@@ -730,6 +732,7 @@
             unlockTap = { id: null, count: 0, last: 0 };
 
             document.body.dataset.round = round;
+            document.body.dataset.grid = totalSlots(round); // 100格的专场使用放大格子排法
             document.querySelectorAll('.round-tab').forEach((tab) => {
                 const active = tab.dataset.round === round;
                 tab.classList.toggle('active', active);

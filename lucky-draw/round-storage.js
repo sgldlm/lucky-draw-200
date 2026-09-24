@@ -3,8 +3,8 @@
  * 抽奖程序把配置/结果/名单存在固定的 localStorage 键里（config、result、newLottery、list），
  * 各专场会互相覆盖。这里按地址参数 ?round=100 / ?round=50 给键名加前缀：
  * - 200赛地专场（无参数）：沿用原键名，已有数据不受影响
- * - 100赛地专场：使用 r100:config 等独立键名
- * - 50赛地专场：使用 r50:config 等独立键名；抽奖总人数默认 100（只有100个名额）
+ * - 100赛地专场：使用 r100:config 等独立键名；抽奖总人数 100（100个名额）
+ * - 50赛地专场：使用 r50:config 等独立键名；抽奖总人数 100（100个名额）
  * 同时把"重置全部数据"用到的 localStorage.clear() 改成只清本场次的键，
  * 避免误删另一个场次和选号页的数据。
  */
@@ -29,12 +29,18 @@
     };
 
     // 各专场的抽奖总人数（号码范围 1～N）；未列出的按抽奖程序默认 500
-    var NUMBER_BY_ROUND = { '50': 100 };
+    var NUMBER_BY_ROUND = { '50': 100, '100': 100 };
     var number = NUMBER_BY_ROUND[round];
     if (number) {
-        // 首次打开时写入默认配置，抽奖程序启动时会读取它
-        if (!getItem.call(localStorage, PREFIX + 'config')) {
+        var saved = null;
+        try { saved = JSON.parse(getItem.call(localStorage, PREFIX + 'config')); } catch (e) {}
+        if (!saved) {
+            // 首次打开时写入默认配置，抽奖程序启动时会读取它
             setItem.call(localStorage, PREFIX + 'config', JSON.stringify({ name: '幸运抽大奖', number: number, firstPrize: 1 }));
+        } else if (Number(saved.number) === 500) {
+            // 以前保存的是默认 500 人（100赛地专场原来是500个名额），改成当前名额数
+            saved.number = number;
+            setItem.call(localStorage, PREFIX + 'config', JSON.stringify(saved));
         }
     }
 
