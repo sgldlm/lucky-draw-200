@@ -15,7 +15,7 @@
 
     // 场次主色（round-storage.js 设置 window.LUCKY_DRAW_ROUND）
     var ROUND = window.LUCKY_DRAW_ROUND || '200';
-    var ACCENT = ROUND === '100' ? '#FF9F1C' : '#FFCC00';
+    var ACCENT = ROUND === '100' ? '#FF9F1C' : ROUND === '50' ? '#2BE07A' : '#FFCC00';
 
     // 页面固定音乐
     var FIXED_TRACK = { name: '1998韩国歌曲 哎', nameEn: '1998 Korean Song "Ae"', url: 'media/fixed-music.mp3', fixed: true };
@@ -431,6 +431,20 @@
     }
 
     // ---------- 接管抽奖程序的播放器 ----------
+    // 50赛地专场只有100个名额：抽奖程序"重置抽奖配置 / 重置全部数据"会把抽奖总人数恢复成默认500，这里改回100
+    function keepRoundNumber() {
+        var number = window.LUCKY_DRAW_NUMBER;
+        var root = document.getElementById('root');
+        var store = number && root && root.__vue__ && root.__vue__.$store;
+        if (!store) return;
+        if (store.state.config.number === 500) store.state.config.number = number;
+        store.subscribe(function (mutation, state) {
+            if (mutation.type === 'setClearConfig' || mutation.type === 'setClearStore') {
+                state.config.number = number;
+            }
+        });
+    }
+
     function init(a) {
         audio = a;
         audio.autoplay = false;
@@ -451,6 +465,7 @@
             }
         });
         buildUI();
+        keepRoundNumber();
         if (LANG === 'en') startTranslating();
         listenParent();
         applyTrack(false);   // 先装载固定音乐

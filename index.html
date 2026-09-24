@@ -49,6 +49,10 @@
             --accent: #FF9F1C; --accent-hi: #FFD36B; --accent-lo: #FF3D00;
             --glow: rgba(255, 110, 20, 0.6); --glow-soft: rgba(255, 110, 20, 0.2);
         }
+        body[data-round="50"] {
+            --accent: #2BE07A; --accent-hi: #B2FFD0; --accent-lo: #06934A;
+            --glow: rgba(43, 224, 122, 0.55); --glow-soft: rgba(43, 224, 122, 0.18);
+        }
 
         /* 页面底：深色舞台 + 主色柔光 */
         body { background-color: var(--stage); color: #fff; }
@@ -284,12 +288,33 @@
         #gridContainer .grid-cell { font-size: calc(43cqi / var(--cols)); border-radius: calc(12cqi / var(--cols)); }
         #gridContainer .lock-icon { font-size: calc(68cqi / var(--cols)); }
 
+        /* 50赛地专场：100格铺满与500格完全相同大小的区域，每格放大
+           手机：10列×10行（500格为20列×25行）；电脑/大屏：20列×5行（500格为50列×10行） */
+        .grid-wrap { container-type: inline-size; }
+        body[data-round="50"] #gridContainer {
+            --cols: 10;
+            grid-template-rows: repeat(10, minmax(0, 1fr));
+            height: calc((100cqi - 38px) * 1.25 + 48px);   /* = 500格在手机上的总高度 */
+        }
+        body[data-round="50"] #gridContainer .grid-cell { aspect-ratio: auto; height: auto; font-size: 5cqi; }
+        body[data-round="50"] #gridContainer .lock-icon { font-size: 7cqi; }
+        @media (min-width: 1024px) {
+            body[data-round="50"] #gridContainer {
+                --cols: 20;
+                grid-template-rows: repeat(5, minmax(0, 1fr));
+                height: calc((100cqi - 196px) / 5 + 36px); /* = 500格在电脑上的总高度 */
+            }
+            body[data-round="50"] #gridContainer .grid-cell { font-size: 2.5cqi; }
+            body[data-round="50"] #gridContainer .lock-icon { font-size: 3.2cqi; }
+        }
+
         /* ===== 版面节奏：间距和字号随屏幕高度伸缩 =====
            大屏 / LED：更宽松、字更大，版面上下饱满；小屏：自动收紧，仍能一屏放下 */
         .l-header { padding-top: clamp(10px, 3vh, 56px); padding-bottom: clamp(30px, 5.4vh, 100px); }
         .l-title { font-size: clamp(1.6rem, min(3.2vw, 5.2vh), 3.6rem); line-height: 1.15; }
         .l-tabs { margin-top: clamp(8px, 2.2vh, 28px); }
-        .l-tabs .round-tab { font-size: clamp(0.95rem, 1.9vh, 1.35rem); padding: clamp(6px, 1vh, 12px) clamp(18px, 2vw, 32px); }
+        .l-tabs { gap: clamp(6px, 0.8vw, 12px) !important; }
+        .l-tabs .round-tab { font-size: clamp(0.95rem, 1.9vh, 1.35rem); padding: clamp(6px, 1vh, 12px) clamp(10px, calc(2vw - 8px), 32px); }
         .l-card-wrap { margin-top: calc(-1 * clamp(24px, 4.5vh, 64px)); }
         .l-card { padding: clamp(10px, 2.2vh, 36px) clamp(16px, 2vw, 40px); }
         .l-stat-label { font-size: clamp(0.8rem, 1.6vh, 1.15rem); }
@@ -328,6 +353,7 @@
             <h1 class="l-title fx-title font-extrabold tracking-tight" data-i18n="title">100赛地 · 购物赢大奖</h1>
             <!-- 场次切换 -->
             <div class="l-tabs inline-flex gap-3" role="tablist" aria-label="选择场次">
+                <button type="button" class="round-tab" data-round="50" role="tab"><span data-i18n="tab50">50赛地专场</span></button>
                 <button type="button" class="round-tab active" data-round="100" role="tab"><span data-i18n="tab100">100赛地专场</span></button>
                 <button type="button" class="round-tab" data-round="200" role="tab"><span data-i18n="tab200">200赛地专场</span></button>
             </div>
@@ -345,7 +371,7 @@
             <div class="grid grid-cols-3 text-center fx-divide">
                 <div>
                     <p class="fx-stat-label l-stat-label" data-i18n="statTotal">总名额</p>
-                    <p class="l-stat-num fx-stat-num font-extrabold">500</p>
+                    <p id="totalCount" class="l-stat-num fx-stat-num font-extrabold">500</p>
                 </div>
                 <div>
                     <p class="fx-stat-label l-stat-label" data-i18n="statSold">已售出</p>
@@ -365,8 +391,8 @@
     </div><!-- /.hero -->
 
     <main class="w-[90%] mx-auto l-main flex-1 flex flex-col justify-center">
-        <!-- 500格选号区 -->
-        <section>
+        <!-- 选号区（500格；50赛地专场为100格，铺满同样大小的区域） -->
+        <section class="grid-wrap">
             <div class="l-legend legend-row">
                 <h2 class="fx-legend-title font-extrabold" data-i18n="perSlot">每格=100赛地商品+1次抽奖资格</h2>
                 <!-- 今日大奖 -->
@@ -403,6 +429,7 @@
         <!-- "返回"按钮在抽奖页顶栏内（lucky-draw/custom-music.js），点击后发消息关闭本层 -->
         <div class="relative flex-1">
             <iframe id="drawFrame200" data-round="200" title="200赛地专场抽奖" class="absolute inset-0 w-full h-full border-0 invisible" allow="fullscreen; autoplay"></iframe>
+            <iframe id="drawFrame50" data-round="50" title="50赛地专场抽奖" class="absolute inset-0 w-full h-full border-0 invisible" allow="fullscreen; autoplay"></iframe>
             <iframe id="drawFrame100" data-round="100" title="100赛地专场抽奖" class="absolute inset-0 w-full h-full border-0 invisible" allow="fullscreen; autoplay"></iframe>
         </div>
     </div>
@@ -430,13 +457,14 @@
         // ============== 配置区 ==============
         const CONFIG = {
             // 总名额（每个场次）
-            TOTAL_SLOTS: 500,
+            TOTAL_SLOTS: 500, // 默认名额（各专场可在下方 ROUNDS 里单独设置 slots）
 
             // 两个场次：单价、抽奖页地址、本地存储键名
             // 抽奖页为本地副本，基于开源项目 vitozyf/lucky-draw（MIT）；?round=100 让 100赛地专场的抽奖配置/结果单独保存
             ROUNDS: {
                 200: { price: 200, drawUrl: 'lucky-draw/index.html#/', storageKey: 'shopwin_round_data_v2', color: '#FFCC00' },
-                100: { price: 100, drawUrl: 'lucky-draw/index.html?round=100#/', storageKey: 'shopwin_round_data_100', color: '#FF9F1C' }
+                100: { price: 100, drawUrl: 'lucky-draw/index.html?round=100#/', storageKey: 'shopwin_round_data_100', color: '#FF9F1C' },
+                50: { price: 50, slots: 100, drawUrl: 'lucky-draw/index.html?round=50#/', storageKey: 'shopwin_round_data_50', color: '#2BE07A' }
             },
 
             // 打开 / 刷新页面时固定进入的场次
@@ -481,9 +509,14 @@
         }
 
         // ========== 生成格子 ==========
+        // 当前专场的名额数
+        function totalSlots(round) {
+            return CONFIG.ROUNDS[round || currentRound].slots || CONFIG.TOTAL_SLOTS;
+        }
+
         function initGrid() {
             gridContainer.innerHTML = '';
-            for (let i = 1; i <= CONFIG.TOTAL_SLOTS; i++) {
+            for (let i = 1; i <= totalSlots(); i++) {
                 const cell = document.createElement('div');
                 cell.className = 'grid-cell cell-available';
                 cell.textContent = i;
@@ -498,6 +531,7 @@
             zh: {
                 docTitle: '{price}赛地 · 购物赢大奖 —官方活动平台',
                 title: '{price}赛地 · 购物赢大奖',
+                tab50: '50赛地专场',
                 tab100: '100赛地专场',
                 tab200: '200赛地专场',
                 statTotal: '总名额',
@@ -529,6 +563,7 @@
             en: {
                 docTitle: '{price} Cedis · Shop & Win Big — Official Event Platform',
                 title: '{price} Cedis · Shop & Win Big',
+                tab50: '50 Cedis Special',
                 tab100: '100 Cedis Special',
                 tab200: '200 Cedis Special',
                 statTotal: 'Total Slots',
@@ -703,6 +738,7 @@
             themeColorMeta.setAttribute('content', CONFIG.ROUNDS[round].color);
             renderTexts(); // 标题、说明、今日大奖等文字随专场更新
 
+            if (gridContainer.children.length !== totalSlots()) initGrid(); // 名额数不同（50专场100格）时重建格子
             refresh();
         }
 
@@ -796,7 +832,7 @@
 
         // ========== 全选（测试用）：一键锁定当前场次全部格子 ==========
         document.getElementById('selectAllBtn').addEventListener('click', () => {
-            for (let i = 1; i <= CONFIG.TOTAL_SLOTS; i++) lockCell(i);
+            for (let i = 1; i <= totalSlots(); i++) lockCell(i);
             refresh();
         });
 
@@ -804,11 +840,12 @@
         const drawView = document.getElementById('drawView');
         const drawFrames = {
             200: document.getElementById('drawFrame200'),
-            100: document.getElementById('drawFrame100')
+            100: document.getElementById('drawFrame100'),
+            50: document.getElementById('drawFrame50')
         };
 
         function allLocked() {
-            return soldSlots.size + selectedSlots.size >= CONFIG.TOTAL_SLOTS;
+            return soldSlots.size + selectedSlots.size >= totalSlots();
         }
 
         let openRound = null; // 当前显示中的抽奖页场次；null 表示抽奖页未打开
@@ -860,18 +897,15 @@
             if (e.data.type === 'lucky-draw:back' && openRound === round) closeDraw();
         });
 
-        // 预加载：页面打开 1 秒后在后台加载两个专场的抽奖页，点"开始抽奖"时无需等待
+        // 预加载：页面打开 1 秒后在后台依次加载各专场的抽奖页（当前专场优先），点"开始抽奖"时无需等待
         window.addEventListener('load', () => {
-            setTimeout(() => {
-                ensureFrameLoaded(currentRound);
-                const other = Object.keys(drawFrames).find((r) => r !== currentRound);
-                setTimeout(() => ensureFrameLoaded(other), 1500);
-            }, 1000);
+            const order = [currentRound].concat(Object.keys(drawFrames).filter((r) => r !== currentRound));
+            order.forEach((r, i) => setTimeout(() => ensureFrameLoaded(r), 1000 + i * 1500));
         });
 
         // ========== 渲染格子状态 ==========
         function renderCells() {
-            for (let i = 1; i <= CONFIG.TOTAL_SLOTS; i++) {
+            for (let i = 1; i <= totalSlots(); i++) {
                 const cell = gridContainer.querySelector(`[data-id="${i}"]`);
                 cell.className = 'grid-cell';
                 if (soldSlots.has(i) || selectedSlots.has(i)) {
@@ -888,8 +922,11 @@
         function updateStats() {
             // 锁定即售出：已售出 = 已支付 + 当前锁定
             const sold = soldSlots.size + selectedSlots.size;
-            const remain = CONFIG.TOTAL_SLOTS - sold;
-            const percent = Math.round((sold / CONFIG.TOTAL_SLOTS) * 100);
+            const total = totalSlots();
+            const remain = total - sold;
+            const percent = Math.round((sold / total) * 100);
+
+            document.getElementById('totalCount').textContent = total;
 
             soldCountEl.textContent = sold;
             remainCountEl.textContent = remain;
