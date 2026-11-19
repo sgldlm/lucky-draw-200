@@ -6,13 +6,14 @@
  * - 外部 CDN（Tailwind、图标字体）也会缓存，断网时页面样式不丢
  * 更新网站文件后，把 CACHE_VERSION 改一个新值，用户下次打开会自动换成新版本
  */
-const CACHE_VERSION = 'v28';
+const CACHE_VERSION = 'v29';
 const CACHE_NAME = 'saidi200-' + CACHE_VERSION;
 
 const PRECACHE = [
     './',
     'index.html',
     'manifest.json',
+    'auth-gate.js',
     'icons/icon-192.png',
     'icons/icon-512.png',
     'icons/icon-maskable-512.png',
@@ -79,6 +80,9 @@ async function rangeFromCache(req) {
 self.addEventListener('fetch', (event) => {
     const req = event.request;
     if (req.method !== 'GET') return;
+    // 访问密码文件：永远联网读取，不走缓存（保证改密码后旧密码立即失效）
+    const u = new URL(req.url);
+    if (u.hostname === 'api.github.com' || u.pathname.endsWith('/auth.json')) return;
     if (req.headers.has('range')) {
         event.respondWith(rangeFromCache(req));
         return;

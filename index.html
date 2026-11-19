@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="赢大奖">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script src="auth-gate.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
@@ -381,6 +382,7 @@
         <div class="tools">
             <button type="button" id="langBtn" class="tool-btn" title="中文 / English">EN</button>
             <button type="button" id="editBtn" class="tool-btn">✎ 编辑</button>
+            <button type="button" id="pwdBtn" class="tool-btn" title="修改访问密码" onclick="window.SaidiAuth && SaidiAuth.openChange()">🔒 密码</button>
         </div>
     </header>
 
